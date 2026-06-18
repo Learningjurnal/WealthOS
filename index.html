@@ -1,0 +1,1090 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WealthOS — Personal Family Office</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%231D9E75'/><text x='16' y='22' text-anchor='middle' font-size='18' font-weight='700' fill='white' font-family='system-ui'>W</text></svg>">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<style>
+:root{
+  --green:#1D9E75;--green-l:#E1F5EE;--green-d:#0F6E56;
+  --blue:#378ADD;--blue-l:#E6F1FB;--blue-d:#185FA5;
+  --amber:#EF9F27;--amber-l:#FAEEDA;--amber-d:#854F0B;
+  --red:#E24B4A;--red-l:#FCEBEB;--red-d:#A32D2D;
+  --purple:#534AB7;--purple-l:#EEEDFE;--purple-d:#3C3489;
+  --gray:#888780;--gray-l:#F1EFE8;--gray-d:#2C2C2A;
+  --bg:#f5f5f3;--bg2:#ffffff;--bg3:#f0efec;
+  --text:#1a1a18;--text2:#5f5e5a;--text3:#999890;
+  --border:rgba(0,0,0,0.09);--border2:rgba(0,0,0,0.14);
+  --radius:8px;--radius-lg:12px;
+}
+@media(prefers-color-scheme:dark){
+  :root{
+    --bg:#18181a;--bg2:#222224;--bg3:#2a2a2c;
+    --text:#e8e8e4;--text2:#a0a09a;--text3:#666660;
+    --border:rgba(255,255,255,0.09);--border2:rgba(255,255,255,0.14);
+    --green-l:#0a2e1f;--green-d:#9FE1CB;
+    --blue-l:#0a1e33;--blue-d:#85B7EB;
+    --amber-l:#2a1e00;--amber-d:#FAC775;
+    --red-l:#2a0a0a;--red-d:#F09595;
+    --purple-l:#1a1840;--purple-d:#AFA9EC;
+  }
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5}
+a{color:var(--blue);text-decoration:none}
+button{font-family:inherit;cursor:pointer}
+
+/* ── Sidebar ── */
+.sidebar{position:fixed;top:0;left:0;width:192px;height:100vh;background:var(--bg2);border-right:0.5px solid var(--border);display:flex;flex-direction:column;z-index:100;overflow-y:auto}
+.logo{padding:16px 14px 12px;border-bottom:0.5px solid var(--border)}
+.logo-row{display:flex;align-items:center;gap:9px}
+.logo-icon{width:30px;height:30px;border-radius:7px;background:var(--green);display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:700;flex-shrink:0}
+.logo-name{font-size:14px;font-weight:600;letter-spacing:-0.4px}
+.logo-tag{font-size:10px;color:var(--text3);margin-top:1px}
+.nav{padding:6px 0;flex:1}
+.nav-sec{padding:10px 14px 3px;font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.6px;font-weight:500}
+.nav-item{display:flex;align-items:center;gap:8px;padding:7px 14px;font-size:12.5px;color:var(--text2);border:none;background:none;width:100%;text-align:left;transition:background .12s,color .12s;cursor:pointer}
+.nav-item:hover{background:var(--bg3);color:var(--text)}
+.nav-item.active{background:var(--bg3);color:var(--green);font-weight:500}
+.nav-item i{font-size:14px;width:16px;text-align:center;flex-shrink:0}
+.nav-footer{padding:12px 14px;border-top:0.5px solid var(--border)}
+.user-row{display:flex;align-items:center;gap:8px}
+.avatar{width:28px;height:28px;border-radius:50%;background:var(--green-l);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--green-d);flex-shrink:0}
+.user-name{font-size:12px;font-weight:500}
+.user-plan{font-size:10px;color:var(--text3)}
+
+/* ── Main ── */
+.main{margin-left:192px;padding:20px 22px;min-height:100vh}
+.topbar{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;gap:12px}
+.page-title{font-size:17px;font-weight:600;letter-spacing:-0.3px}
+.page-sub{font-size:12px;color:var(--text3);margin-top:2px}
+.topbar-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.btn{padding:6px 12px;font-size:12px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg2);color:var(--text2);cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:all .12s;white-space:nowrap}
+.btn:hover{background:var(--bg3);color:var(--text)}
+.btn-primary{background:var(--green);color:#fff;border-color:var(--green)}
+.btn-primary:hover{background:var(--green-d);color:#fff}
+.status-text{font-size:11px;color:var(--text3)}
+.status-ok{color:var(--green-d)}
+.status-warn{color:var(--amber-d)}
+
+/* ── KPI Row ── */
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:10px;margin-bottom:13px}
+.kpi{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:14px 16px;border-left:3px solid var(--kpi-accent,transparent)}
+.kpi-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:5px}
+.kpi-value{font-size:18px;font-weight:600;line-height:1.2;letter-spacing:-0.3px}
+.kpi-sub{font-size:11px;color:var(--text3);margin-top:4px;display:flex;align-items:center;gap:4px}
+.delta{display:inline-flex;align-items:center;gap:2px;padding:1px 5px;border-radius:3px;font-size:10px;font-weight:600}
+.delta-pos{background:var(--green-l);color:var(--green-d)}
+.delta-neg{background:var(--red-l);color:var(--red-d)}
+.delta-warn{background:var(--amber-l);color:var(--amber-d)}
+
+/* ── Card ── */
+.card{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:16px 18px;margin-bottom:12px}
+.card-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:13px}
+.card-title{font-size:10.5px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px}
+.card-link{font-size:11px;color:var(--blue);background:none;border:none;cursor:pointer;padding:0}
+.row2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;margin-bottom:12px}
+.row3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:12px}
+
+/* ── Table ── */
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{padding:5px 8px;color:var(--text3);font-weight:500;border-bottom:0.5px solid var(--border);font-size:10px;text-transform:uppercase;letter-spacing:0.3px;text-align:left;white-space:nowrap}
+td{padding:8px 8px;border-bottom:0.5px solid var(--border);color:var(--text);white-space:nowrap}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--bg3)}
+
+/* ── Misc ── */
+.badge{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:99px;font-size:10px;font-weight:600}
+.badge-green{background:var(--green-l);color:var(--green-d)}
+.badge-red{background:var(--red-l);color:var(--red-d)}
+.badge-amber{background:var(--amber-l);color:var(--amber-d)}
+.badge-blue{background:var(--blue-l);color:var(--blue-d)}
+.badge-purple{background:var(--purple-l);color:var(--purple-d)}
+.pos{color:var(--green)}
+.neg{color:var(--red)}
+.muted{color:var(--text3)}
+.bar-wrap{background:var(--bg3);border-radius:99px;overflow:hidden}
+.bar{height:100%;border-radius:99px;transition:width .5s ease}
+
+/* ── Mini stat row ── */
+.mini-stat{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:0.5px solid var(--border);font-size:12px}
+.mini-stat:last-child{border-bottom:none}
+
+/* ── Piutang ── */
+.piu-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:0.5px solid var(--border)}
+.piu-row:last-child{border-bottom:none}
+.piu-avatar{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0}
+.piu-info{flex:1;min-width:0}
+.piu-name{font-size:13px;font-weight:500}
+.piu-meta{font-size:11px;color:var(--text3);margin-top:1px}
+.piu-prog{margin-top:6px}
+.piu-amt{text-align:right;flex-shrink:0}
+.piu-val{font-size:13px;font-weight:600}
+.piu-date{font-size:10px;color:var(--text3);margin-top:2px}
+
+/* ── Bank card ── */
+.bank-card{border-radius:var(--radius-lg);padding:16px 18px;margin-bottom:10px;position:relative;overflow:hidden;color:#fff}
+.bank-card::after{content:'';position:absolute;top:-20px;right:-20px;width:100px;height:100px;border-radius:50%;background:rgba(255,255,255,0.07)}
+.bk-label{font-size:10px;opacity:0.65;margin-bottom:4px}
+.bk-val{font-size:20px;font-weight:700;letter-spacing:-0.5px}
+.bk-name{font-size:11px;opacity:0.75;margin-top:8px}
+.bk-bar{height:3px;border-radius:99px;background:rgba(255,255,255,0.2);margin-top:10px;overflow:hidden}
+.bk-bar-fill{height:100%;border-radius:99px;background:rgba(255,255,255,0.6)}
+
+/* ── AI Chat ── */
+.ai-wrap{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:12px}
+.ai-head{padding:12px 16px;border-bottom:0.5px solid var(--border);display:flex;align-items:center;gap:8px}
+.ai-pulse{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.chips{display:flex;gap:6px;flex-wrap:wrap;padding:10px 14px;border-bottom:0.5px solid var(--border)}
+.chip{padding:4px 10px;background:var(--bg3);border:0.5px solid var(--border);border-radius:99px;font-size:11px;color:var(--text2);cursor:pointer;white-space:nowrap;transition:all .12s}
+.chip:hover{border-color:var(--green);color:var(--green)}
+.msgs{padding:14px 16px;min-height:180px;max-height:340px;overflow-y:auto;display:flex;flex-direction:column;gap:10px}
+.msg-row{display:flex;align-items:flex-end;gap:7px}
+.msg-row.user{justify-content:flex-end}
+.msg-av{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0}
+.bubble{padding:9px 12px;border-radius:10px;font-size:12px;line-height:1.65;max-width:84%}
+.bubble.ai{background:var(--bg3);color:var(--text);border-bottom-left-radius:3px}
+.bubble.user{background:var(--green);color:#fff;border-bottom-right-radius:3px}
+.bubble.loading{opacity:.55;font-style:italic}
+.ai-foot{padding:10px 14px;border-top:0.5px solid var(--border);display:flex;gap:8px}
+.ai-inp{flex:1;background:var(--bg3);border:0.5px solid var(--border);border-radius:var(--radius);padding:8px 12px;font-size:12px;color:var(--text);outline:none;font-family:inherit}
+.ai-inp:focus{border-color:var(--green)}
+.ai-send{background:var(--green);color:#fff;border:none;border-radius:var(--radius);padding:8px 14px;font-size:13px;display:flex;align-items:center;gap:5px;transition:background .12s}
+.ai-send:hover{background:var(--green-d)}
+.ai-send:disabled{opacity:.4;cursor:not-allowed}
+
+/* ── Donut ── */
+.donut-wrap{position:relative;flex-shrink:0}
+.donut-center{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;pointer-events:none}
+
+/* ── FIRE progress bar ── */
+.fire-bar{height:10px;border-radius:99px;background:var(--bg3);overflow:hidden;margin:8px 0}
+.fire-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--green),var(--amber))}
+
+/* ── Emergency meter ── */
+.em-bar{border-radius:99px;background:var(--bg3);overflow:hidden;margin:8px 0}
+.em-fill{height:100%;border-radius:99px}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:99px}
+
+/* ── Code block ── */
+.code-block{background:var(--bg3);border:0.5px solid var(--border);border-radius:var(--radius);padding:12px;font-family:'SF Mono',Monaco,monospace;font-size:11px;line-height:1.7;color:var(--text2);overflow-x:auto;margin-top:8px;white-space:pre}
+
+/* ── Market price ── */
+.mkt-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:0.5px solid var(--border)}
+.mkt-row:last-child{border-bottom:none}
+.mkt-sym{font-size:13px;font-weight:600}
+.mkt-name{font-size:10px;color:var(--text3)}
+.mkt-price{text-align:right}
+.mkt-val{font-size:13px;font-weight:600}
+.mkt-chg{font-size:10px;margin-top:1px}
+
+/* ── Sim cards ── */
+.sim-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.sim-card{background:var(--bg3);border-radius:var(--radius);padding:12px;text-align:center}
+.sim-yr{font-size:10px;color:var(--text3);margin-bottom:5px}
+.sim-val{font-size:15px;font-weight:600;letter-spacing:-0.3px}
+.sim-real{font-size:10px;color:var(--green);margin-top:3px}
+
+/* ── Info note ── */
+.note{background:var(--amber-l);border:0.5px solid var(--amber);border-radius:var(--radius);padding:10px 12px;font-size:11px;color:var(--amber-d);line-height:1.7;margin-bottom:12px}
+.note-green{background:var(--green-l);border-color:var(--green);color:var(--green-d)}
+
+/* ── Responsive ── */
+@media(max-width:768px){
+  .sidebar{width:100%;height:auto;position:static;flex-direction:row;flex-wrap:wrap;border-right:none;border-bottom:0.5px solid var(--border)}
+  .main{margin-left:0}
+  .row2,.row3{grid-template-columns:1fr}
+  .kpi-row{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+
+<div class="sidebar" id="sidebar">
+  <div class="logo">
+    <div class="logo-row">
+      <div class="logo-icon">W</div>
+      <div>
+        <div class="logo-name">WealthOS</div>
+        <div class="logo-tag">Personal Family Office</div>
+      </div>
+    </div>
+  </div>
+  <nav class="nav">
+    <div class="nav-sec">Overview</div>
+    <button class="nav-item active" data-page="dashboard"><i class="ti ti-layout-dashboard"></i>Dashboard</button>
+    <button class="nav-item" data-page="bank"><i class="ti ti-building-bank"></i>Saldo Bank</button>
+    <div class="nav-sec">Investasi</div>
+    <button class="nav-item" data-page="portfolio"><i class="ti ti-chart-candle"></i>Portfolio</button>
+    <button class="nav-item" data-page="market"><i class="ti ti-activity"></i>Market Data</button>
+    <div class="nav-sec">Kewajiban</div>
+    <button class="nav-item" data-page="debt"><i class="ti ti-credit-card"></i>Hutang</button>
+    <button class="nav-item" data-page="piutang"><i class="ti ti-receipt"></i>Piutang</button>
+    <div class="nav-sec">Perencanaan</div>
+    <button class="nav-item" data-page="fire"><i class="ti ti-flame"></i>FIRE</button>
+    <button class="nav-item" data-page="projection"><i class="ti ti-trending-up"></i>Proyeksi</button>
+    <button class="nav-item" data-page="tax"><i class="ti ti-receipt-tax"></i>Pajak</button>
+    <div class="nav-sec">AI</div>
+    <button class="nav-item" data-page="ai"><i class="ti ti-brain"></i>AI Advisor</button>
+  </nav>
+  <div class="nav-footer">
+    <div class="user-row">
+      <div class="avatar">ZA</div>
+      <div><div class="user-name">Zuma</div><div class="user-plan">Premium · WealthOS</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="main" id="main"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+// ─────────────────────────────────────────────
+// DATA — edit bagian ini sesuai portofolio Anda
+// ─────────────────────────────────────────────
+const DATA = {
+  saham: [
+    { kode:'BBCA', nama:'Bank Central Asia',   lot:50,  beli:8000,  kini:9750, div:190 },
+    { kode:'TLKM', nama:'Telekomunikasi Indo.', lot:200, beli:3800,  kini:3200, div:168 },
+    { kode:'ASII', nama:'Astra International', lot:100, beli:5800,  kini:4650, div:220 },
+    { kode:'BMRI', nama:'Bank Mandiri',         lot:75,  beli:5200,  kini:6400, div:340 },
+    { kode:'GOTO', nama:'GoTo Gojek Tokopedia', lot:500, beli:120,   kini:68,   div:0   },
+  ],
+  etf: [
+    { ticker:'VOO', unit:5, basis:420, kini:518, div:6.6, wht:15 },
+    { ticker:'QQQ', unit:3, basis:380, kini:487, div:1.8, wht:15 },
+    { ticker:'VTI', unit:8, basis:210, kini:265, div:3.4, wht:15 },
+  ],
+  crypto: [
+    { coin:'BTC', qty:0.12, basis:550000000, kini:1050000000 },
+    { coin:'ETH', qty:1.5,  basis:45000000,  kini:62000000   },
+    { coin:'SOL', qty:12,   basis:1800000,   kini:2300000    },
+  ],
+  p2p: [
+    { platform:'Modalku',  borrower:'PT Maju Bersama', pokok:50000000, outstanding:42000000, rate:14.5, risk:'Medium' },
+    { platform:'Investree', borrower:'CV Teknologi',   pokok:25000000, outstanding:25000000, rate:12.0, risk:'Low'    },
+    { platform:'Koinworks', borrower:'UD Sejahtera',   pokok:30000000, outstanding:8000000,  rate:15.0, risk:'High'   },
+  ],
+  bank: [
+    { bank:'BCA',    no:'***-1234', saldo:85000000, type:'Tabungan' },
+    { bank:'Mandiri',no:'***-5678', saldo:35000000, type:'Tabungan' },
+    { bank:'BRI',    no:'***-9012', saldo:22000000, type:'Tabungan' },
+  ],
+  piutang: [
+    { nama:'Budi Santoso',  keperluan:'Modal usaha warung',    pokok:25000000, terbayar:15000000, jatuhTempo:'2025-09-01', status:'Lancar' },
+    { nama:'PT Karya Muda', keperluan:'Pinjaman operasional',  pokok:50000000, terbayar:30000000, jatuhTempo:'2025-12-15', status:'Lancar' },
+    { nama:'Rina Dewi',     keperluan:'Biaya pendidikan',      pokok:10000000, terbayar:10000000, jatuhTempo:'2025-06-01', status:'Lunas'  },
+    { nama:'Ahmad Fauzi',   keperluan:'Modal bisnis online',   pokok:15000000, terbayar:2000000,  jatuhTempo:'2025-08-01', status:'Telat'  },
+  ],
+  debt: [
+    { nama:'KPR Rumah',        tipe:'KPR',          outstanding:680000000, bunga:8.5,  cicilan:7200000  },
+    { nama:'Kartu Kredit BCA', tipe:'Kartu Kredit', outstanding:12500000,  bunga:25.5, cicilan:12500000 },
+    { nama:'Pinjaman Usaha',   tipe:'Pinjaman',     outstanding:145000000, bunga:11.0, cicilan:4100000  },
+  ],
+  deposito: 200000000,
+  emas:     85000000,
+  obligasi: 150000000,
+  income:   35000000, // pendapatan bulanan
+};
+
+const USD = 16200; // kurs USD/IDR — update manual atau fetch dari API
+
+// ─────────────────────────────────────────────
+// UTILS
+// ─────────────────────────────────────────────
+const rp = n => {
+  const abs = Math.abs(n);
+  const sign = n < 0 ? '-' : '';
+  if (abs >= 1e12) return sign + 'Rp ' + (abs/1e12).toFixed(2) + ' T';
+  if (abs >= 1e9)  return sign + 'Rp ' + (abs/1e9).toFixed(2)  + ' M';
+  if (abs >= 1e6)  return sign + 'Rp ' + (abs/1e6).toFixed(1)  + ' jt';
+  return sign + 'Rp ' + Math.round(abs).toLocaleString('id-ID');
+};
+const fmt = (n, d=0) => Math.round(n).toLocaleString('id-ID');
+const pctChg = (now, then) => ((now/then - 1)*100).toFixed(1);
+
+function calc() {
+  const s = DATA.saham.reduce((a,x) => {
+    const lot=100, n=x.lot*lot*x.kini, b=x.lot*lot*x.beli;
+    return { v:a.v+n, b:a.b+b, d:a.d+x.lot*lot*x.div*0.9 };
+  }, {v:0,b:0,d:0});
+  const e = DATA.etf.reduce((a,x) => {
+    const n=x.unit*x.kini*USD, b=x.unit*x.basis*USD;
+    return { v:a.v+n, b:a.b+b, d:a.d+x.unit*x.div*USD*(1-x.wht/100) };
+  }, {v:0,b:0,d:0});
+  const c = DATA.crypto.reduce((a,x) => ({ v:a.v+x.qty*x.kini, b:a.b+x.qty*x.basis }), {v:0,b:0});
+  const p = DATA.p2p.reduce((a,x) => ({ v:a.v+x.outstanding, d:a.d+x.outstanding*x.rate/100/12 }), {v:0,d:0});
+  const bankTotal = DATA.bank.reduce((s,x) => s+x.saldo, 0);
+  const piu = DATA.piutang.reduce((a,x) => ({
+    total: a.total+(x.pokok-x.terbayar),
+    pokok: a.pokok+x.pokok,
+    terbayar: a.terbayar+x.terbayar
+  }), {total:0,pokok:0,terbayar:0});
+  const debt = DATA.debt.reduce((a,x) => ({ t:a.t+x.outstanding, c:a.c+x.cicilan }), {t:0,c:0});
+  const aset = s.v+e.v+c.v+p.v+bankTotal+DATA.deposito+DATA.emas+DATA.obligasi+piu.total;
+  const passive = s.d+e.d+p.d*12+DATA.deposito*0.055+DATA.obligasi*0.065;
+  const emMonths = bankTotal / (DATA.income + passive/12);
+  const wScore = wealthScore({s,e,c,p,bankTotal,debt,aset,passive,emMonths,piu});
+  return {s,e,c,p,bankTotal,piu,debt,aset,net:aset-debt.t,passive,emMonths,wScore};
+}
+
+function wealthScore({s,e,c,p,bankTotal,debt,aset,passive,emMonths}) {
+  let sc=0;
+  const dr = debt.t/aset;
+  sc += dr<0.2?25:dr<0.4?15:5;
+  sc += emMonths>=6?20:emMonths>=3?12:4;
+  sc += ((s.v>0?1:0)+(e.v>0?1:0)+(c.v>0?1:0)+(p.v>0?1:0))*5;
+  const pc = (passive/12)/DATA.income;
+  sc += pc>=0.5?20:pc>=0.3?12:5;
+  const nw = aset-debt.t;
+  sc += nw>1e9?15:nw>5e8?10:5;
+  return Math.min(100,sc);
+}
+
+// ─────────────────────────────────────────────
+// MARKET DATA (Yahoo Finance via CF Worker)
+// ─────────────────────────────────────────────
+let marketPrices = {};
+let marketStatus = 'idle'; // idle | loading | ok | error
+
+async function fetchPrices() {
+  const tickers = [
+    ...DATA.saham.map(x => x.kode+'.JK'),
+    ...DATA.etf.map(x => x.ticker),
+  ];
+  setStatus('loading', 'Mengambil harga live...');
+  try {
+    const res = await fetch('/api/prices?tickers='+tickers.join(','));
+    if (!res.ok) throw new Error('HTTP '+res.status);
+    const data = await res.json();
+    let updated = 0;
+    DATA.saham.forEach(x => {
+      const d = data[x.kode+'.JK'];
+      if (d?.price) { x.kini = Math.round(d.price); marketPrices[x.kode+'.JK'] = d; updated++; }
+    });
+    DATA.etf.forEach(x => {
+      const d = data[x.ticker];
+      if (d?.price) { x.kini = parseFloat(d.price.toFixed(2)); marketPrices[x.ticker] = d; updated++; }
+    });
+    if (updated > 0) {
+      setStatus('ok', `✓ Harga live diperbarui (${updated} instrumen)`);
+      if (document.getElementById('main').dataset.page === 'dashboard') navTo('dashboard');
+      if (document.getElementById('main').dataset.page === 'market') navTo('market');
+    } else {
+      setStatus('warn', '⚠ Tidak ada data baru — pakai harga manual');
+    }
+  } catch (err) {
+    setStatus('error', '⚠ Gagal: '+err.message+' — pakai harga manual');
+  }
+}
+
+function setStatus(type, msg) {
+  marketStatus = type;
+  const el = document.getElementById('mkt-status');
+  if (el) {
+    el.textContent = msg;
+    el.className = 'status-text ' + (type==='ok'?'status-ok':type==='warn'||type==='error'?'status-warn':'');
+  }
+}
+
+// ─────────────────────────────────────────────
+// NAVIGATION
+// ─────────────────────────────────────────────
+let aiMsgs = [];
+
+function navTo(page) {
+  document.querySelectorAll('.nav-item').forEach(b => {
+    b.classList.toggle('active', b.dataset.page === page);
+  });
+  const el = document.getElementById('main');
+  el.dataset.page = page;
+  const map = {
+    dashboard: pgDash, bank: pgBank, portfolio: pgPortfolio,
+    market: pgMarket, debt: pgDebt, piutang: pgPiutang,
+    fire: pgFire, projection: pgProj, tax: pgTax, ai: pgAI
+  };
+  el.innerHTML = (map[page] || pgDash)();
+  if (page==='dashboard') setTimeout(drawAllocChart, 80);
+  if (page==='fire') setTimeout(drawFireChart, 80);
+  if (page==='projection') setTimeout(initProjChart, 80);
+  if (page==='ai') initAI();
+}
+
+document.querySelectorAll('.nav-item[data-page]').forEach(b => {
+  b.addEventListener('click', () => navTo(b.dataset.page));
+});
+
+// ─────────────────────────────────────────────
+// PAGES
+// ─────────────────────────────────────────────
+
+function pgDash() {
+  const a = calc();
+  const dr = (a.debt.t/a.aset*100).toFixed(1);
+  const wsGrade = a.wScore>=75?'Excellent':a.wScore>=55?'Good':'Fair';
+  const wsBadge = a.wScore>=75?'badge-green':a.wScore>=55?'badge-blue':'badge-amber';
+  return `
+<div class="topbar">
+  <div><div class="page-title">Dashboard Utama</div>
+  <div class="page-sub">${new Date().toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</div></div>
+  <div class="topbar-right">
+    <span id="mkt-status" class="status-text">—</span>
+    <button class="btn btn-primary" onclick="fetchPrices()"><i class="ti ti-refresh"></i> Live Price</button>
+  </div>
+</div>
+<div class="kpi-row">
+  <div class="kpi" style="--kpi-accent:var(--green)"><div class="kpi-label">Net Worth</div><div class="kpi-value">${rp(a.net)}</div><div class="kpi-sub"><span class="delta delta-pos">▲ 12.4%</span> YTD</div></div>
+  <div class="kpi" style="--kpi-accent:var(--blue)"><div class="kpi-label">Total Aset</div><div class="kpi-value">${rp(a.aset)}</div><div class="kpi-sub">9 kategori aset</div></div>
+  <div class="kpi" style="--kpi-accent:var(--red)"><div class="kpi-label">Total Hutang</div><div class="kpi-value">${rp(a.debt.t)}</div><div class="kpi-sub">Debt Ratio ${dr}%</div></div>
+  <div class="kpi" style="--kpi-accent:var(--green)"><div class="kpi-label">Passive Income</div><div class="kpi-value">${rp(a.passive/12)}<span style="font-size:11px;color:var(--text3)">/bln</span></div><div class="kpi-sub">${rp(a.passive)}/tahun</div></div>
+  <div class="kpi" style="--kpi-accent:var(--purple)"><div class="kpi-label">Wealth Score</div><div class="kpi-value">${a.wScore}<span style="font-size:11px;color:var(--text3)">/100</span></div><div class="kpi-sub"><span class="badge ${wsBadge}">${wsGrade}</span></div></div>
+  <div class="kpi" style="--kpi-accent:var(--amber)"><div class="kpi-label">Dana Darurat</div><div class="kpi-value">${a.emMonths.toFixed(1)}<span style="font-size:11px;color:var(--text3)"> bln</span></div><div class="kpi-sub ${a.emMonths<3?'neg':a.emMonths<6?'':'pos'}">${a.emMonths<3?'⚠ Kritis':a.emMonths<6?'⚠ Perlu tambah':'✓ Aman'}</div></div>
+</div>
+<div class="row2">
+  <div class="card">
+    <div class="card-hd"><span class="card-title">Alokasi Aset</span><button class="card-link" onclick="navTo('portfolio')">Detail →</button></div>
+    <div style="display:flex;align-items:center;gap:18px">
+      <div class="donut-wrap" style="width:110px;height:110px">
+        <canvas id="allocC" width="110" height="110" role="img" aria-label="Donut chart alokasi aset"></canvas>
+        <div class="donut-center"><div style="font-size:18px;font-weight:700">${a.wScore}</div><div style="font-size:10px;color:var(--text3)">score</div></div>
+      </div>
+      <div style="flex:1">
+        ${[
+          {l:'Saham IDX', v:a.s.v, c:'#378ADD'},
+          {l:'ETF USA',   v:a.e.v, c:'#1D9E75'},
+          {l:'Crypto',    v:a.c.v, c:'#EF9F27'},
+          {l:'P2P',       v:a.p.v, c:'#D85A30'},
+          {l:'Bank',      v:a.bankTotal, c:'#534AB7'},
+          {l:'Deposito',  v:DATA.deposito, c:'#888780'},
+        ].map(x => `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;font-size:11px">
+          <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${x.c};margin-right:5px;vertical-align:middle"></span>${x.l}</span>
+          <span style="font-weight:600">${(x.v/a.aset*100).toFixed(1)}%</span></div>`).join('')}
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-hd"><span class="card-title">Passive Income Engine</span></div>
+    ${[
+      {l:'Dividen Saham IDX', v:a.s.d/12},
+      {l:'Dividen ETF USA',   v:a.e.d/12},
+      {l:'Bunga P2P Lending', v:a.p.d},
+      {l:'Deposito 5.5%',     v:DATA.deposito*0.055/12},
+      {l:'Obligasi 6.5%',     v:DATA.obligasi*0.065/12},
+    ].map(x => `<div class="mini-stat"><span style="color:var(--text2)">${x.l}</span><span style="font-weight:600;color:var(--green)">${rp(x.v)}/bln</span></div>`).join('')}
+    <div style="margin-top:10px;padding-top:10px;border-top:0.5px solid var(--border);display:flex;justify-content:space-between;font-size:13px;font-weight:600">
+      <span>Total</span><span style="color:var(--green)">${rp(a.passive/12)}/bln</span>
+    </div>
+  </div>
+</div>
+<div class="row2">
+  <div class="card">
+    <div class="card-hd"><span class="card-title">FIRE Progress</span><button class="card-link" onclick="navTo('fire')">Detail →</button></div>
+    ${(() => {
+      const target = a.passive*25;
+      const pct = Math.min(100, a.net/target*100);
+      return `
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px">
+        <span class="muted">Net Worth</span><span style="font-weight:600">${rp(a.net)}</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:10px">
+        <span class="muted">FIRE Target (25×)</span><span style="font-weight:600">${rp(target)}</span></div>
+      <div class="fire-bar"><div class="fire-fill" style="width:${pct.toFixed(1)}%"></div></div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-top:2px">
+        <span>${pct.toFixed(1)}% tercapai</span><span>Est. 2038 @ CAGR 12%</span></div>
+      <div style="margin-top:10px;padding:8px 10px;background:var(--green-l);border-radius:var(--radius);font-size:11px;color:var(--green-d)">
+        Rule of 4%: tarik <strong>${rp(a.net*0.04/12)}/bln</strong> saat FIRE tercapai</div>`;
+    })()}
+  </div>
+  <div class="card">
+    <div class="card-hd"><span class="card-title">Dana Darurat</span><button class="card-link" onclick="navTo('bank')">Kelola →</button></div>
+    ${(() => {
+      const target6 = DATA.income*6;
+      const pct = Math.min(100, a.bankTotal/target6*100);
+      const fillColor = a.emMonths>=6?'var(--green)':a.emMonths>=3?'var(--amber)':'var(--red)';
+      return `
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px">
+        <span class="muted">Total Saldo Bank</span><span style="font-weight:600">${rp(a.bankTotal)}</span></div>
+      <div class="em-bar" style="height:10px"><div class="em-fill" style="width:${pct.toFixed(0)}%;background:${fillColor}"></div></div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-top:2px margin-bottom:10px">
+        <span>0</span><span>3 bln</span><span>6 bln (${rp(target6)})</span></div>
+      <div style="margin-top:10px">
+        ${DATA.bank.map(b => `<div class="mini-stat"><span>${b.bank} ${b.type}</span><span style="font-weight:600">${rp(b.saldo)}</span></div>`).join('')}
+      </div>`;
+    })()}
+  </div>
+</div>`;
+}
+
+function drawAllocChart() {
+  const a = calc();
+  const vals = [a.s.v,a.e.v,a.c.v,a.p.v,a.bankTotal,DATA.deposito,DATA.emas,DATA.obligasi];
+  const cols = ['#378ADD','#1D9E75','#EF9F27','#D85A30','#534AB7','#888780','#D4537E','#639922'];
+  const canvas = document.getElementById('allocC');
+  if (!canvas || !window.Chart) return;
+  new Chart(canvas, {
+    type: 'doughnut',
+    data: { labels:['Saham','ETF','Crypto','P2P','Bank','Deposito','Emas','Obligasi'],
+            datasets:[{data:vals, backgroundColor:cols, borderWidth:1.5, borderColor:'#00000015'}] },
+    options: { cutout:'68%', responsive:false, plugins:{legend:{display:false},
+      tooltip:{callbacks:{label:c=>' '+rp(c.raw)+' ('+((c.raw/vals.reduce((a,b)=>a+b))*100).toFixed(1)+'%)'}}} }
+  });
+}
+
+function pgBank() {
+  const a = calc();
+  const target6 = DATA.income*6;
+  const target3 = DATA.income*3;
+  const fillColor = a.emMonths>=6?'var(--green)':a.emMonths>=3?'var(--amber)':'var(--red)';
+  const bankColors = ['#003087','#003580','#002D72'];
+  return `
+<div class="topbar"><div><div class="page-title">Saldo Bank & Dana Darurat</div>
+<div class="page-sub">Kelola rekening dan pantau kecukupan dana darurat</div></div></div>
+<div class="kpi-row">
+  <div class="kpi" style="--kpi-accent:var(--green)"><div class="kpi-label">Total Saldo Bank</div><div class="kpi-value">${rp(a.bankTotal)}</div></div>
+  <div class="kpi" style="--kpi-accent:${a.emMonths>=6?'var(--green)':a.emMonths>=3?'var(--amber)':'var(--red)'}">
+    <div class="kpi-label">Dana Darurat</div><div class="kpi-value">${a.emMonths.toFixed(1)} bln</div>
+    <div class="kpi-sub">${a.emMonths>=6?'✓ Ideal (≥6 bln)':'⚠ Target 6 bulan'}</div></div>
+  <div class="kpi" style="--kpi-accent:var(--blue)"><div class="kpi-label">Target 6 Bulan</div><div class="kpi-value">${rp(target6)}</div></div>
+  <div class="kpi" style="--kpi-accent:var(--amber)">
+    <div class="kpi-label">${a.bankTotal>=target6?'Surplus':'Kekurangan'}</div>
+    <div class="kpi-value">${a.bankTotal>=target6?rp(a.bankTotal-target6):rp(target6-a.bankTotal)}</div>
+    <div class="kpi-sub">${a.bankTotal>=target6?'<span class="pos">Di atas target!</span>':'Perlu ditambah'}</div>
+  </div>
+</div>
+${DATA.bank.map((b,i) => `
+<div class="bank-card" style="background:linear-gradient(135deg,${bankColors[i]},${bankColors[i]}dd)">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start">
+    <div><div class="bk-label">Saldo Rekening</div><div class="bk-val">${rp(b.saldo)}</div></div>
+    <div style="text-align:right"><div class="bk-label">${b.type}</div><div style="font-size:11px;opacity:.75">${b.no}</div></div>
+  </div>
+  <div class="bk-name">Bank ${b.bank}</div>
+  <div class="bk-bar"><div class="bk-bar-fill" style="width:${Math.min(100,b.saldo/DATA.income*100).toFixed(0)}%"></div></div>
+  <div style="font-size:10px;opacity:.55;margin-top:2px">${(b.saldo/DATA.income).toFixed(1)} bulan pengeluaran</div>
+</div>`).join('')}
+<div class="card">
+  <div class="card-hd"><span class="card-title">Meter Dana Darurat</span></div>
+  <div class="em-bar" style="height:14px"><div class="em-fill" style="width:${Math.min(100,a.bankTotal/target6*100).toFixed(0)}%;background:${fillColor}"></div></div>
+  <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-top:3px">
+    <span>0</span><span>3 bln — ${rp(target3)}</span><span>6 bln — ${rp(target6)}</span>
+  </div>
+  <div style="margin-top:14px;font-size:12px;color:var(--text2);line-height:1.9">
+    <div>• Standar perencana keuangan: <strong>6 bulan</strong> untuk single income, <strong>3 bulan</strong> untuk dual income</div>
+    <div>• Pisahkan rekening dana darurat dari rekening operasional harian</div>
+    <div>• Tempatkan di <strong>deposito liquid</strong> atau tabungan — jangan di reksa dana/saham</div>
+    ${a.emMonths<6?`<div style="color:var(--amber-d);margin-top:8px">⚠ Perlu menambah <strong>${rp(target6-a.bankTotal)}</strong> untuk mencapai 6 bulan dana darurat</div>`
+    :`<div style="color:var(--green-d);margin-top:8px">✓ Dana darurat sudah memenuhi standar minimal 6 bulan</div>`}
+  </div>
+</div>`;
+}
+
+function pgPortfolio() {
+  const a = calc();
+  return `
+<div class="topbar"><div><div class="page-title">Portfolio Management</div></div>
+<div class="topbar-right"><button class="btn btn-primary" onclick="fetchPrices()"><i class="ti ti-refresh"></i> Refresh Harga</button></div></div>
+<div class="card">
+  <div class="card-hd"><span class="card-title">Saham Indonesia</span><span class="badge badge-blue">${rp(a.s.v)} total</span></div>
+  <div class="tbl-wrap"><table><thead><tr>
+    <th>Kode</th><th>Nama</th><th>Lot</th><th>H. Beli</th><th>H. Kini</th><th>Nilai</th><th>P/L</th><th>Div/bln</th><th>Bobot</th>
+  </tr></thead><tbody>
+  ${DATA.saham.map(x => {
+    const n=x.lot*100*x.kini, b=x.lot*100*x.beli, pl=n-b;
+    const plp = ((x.kini/x.beli-1)*100);
+    const live = marketPrices[x.kode+'.JK'];
+    return `<tr>
+      <td><strong style="color:var(--blue)">${x.kode}</strong>${live?'<span style="font-size:9px;color:var(--green);margin-left:4px">●</span>':''}</td>
+      <td style="color:var(--text2)">${x.nama}</td>
+      <td>${x.lot}</td>
+      <td>${fmt(x.beli)}</td>
+      <td style="font-weight:600">${fmt(x.kini)}</td>
+      <td>${rp(n)}</td>
+      <td class="${pl>=0?'pos':'neg'}" style="font-weight:600">${plp>=0?'+':''}${plp.toFixed(1)}%</td>
+      <td style="color:var(--green)">${rp(x.lot*100*x.div*0.9/12)}</td>
+      <td>
+        <div class="bar-wrap" style="height:5px;width:60px"><div class="bar" style="width:${(n/a.s.v*100).toFixed(0)}%;background:var(--blue)"></div></div>
+        <span style="font-size:10px;color:var(--text3)">${(n/a.aset*100).toFixed(1)}%</span>
+      </td>
+    </tr>`;
+  }).join('')}
+  </tbody></table></div>
+</div>
+<div class="row2">
+  <div class="card">
+    <div class="card-hd"><span class="card-title">ETF USA</span><span class="badge badge-green">${rp(a.e.v)}</span></div>
+    <div class="tbl-wrap"><table><thead><tr><th>Ticker</th><th>Unit</th><th>Basis</th><th>Kini (USD)</th><th>Return</th><th>Nilai IDR</th></tr></thead><tbody>
+    ${DATA.etf.map(x => {
+      const r = ((x.kini/x.basis-1)*100);
+      const live = marketPrices[x.ticker];
+      return `<tr>
+        <td><strong style="color:var(--green)">${x.ticker}</strong>${live?'<span style="font-size:9px;color:var(--green);margin-left:4px">●</span>':''}</td>
+        <td>${x.unit}</td><td>$${x.basis}</td><td style="font-weight:600">$${x.kini}</td>
+        <td class="${r>=0?'pos':'neg'}" style="font-weight:600">${r>=0?'+':''}${r.toFixed(1)}%</td>
+        <td>${rp(x.unit*x.kini*USD)}</td>
+      </tr>`;
+    }).join('')}
+    </tbody></table></div>
+  </div>
+  <div class="card">
+    <div class="card-hd"><span class="card-title">Crypto</span><span class="badge badge-amber">${rp(a.c.v)}</span></div>
+    <div class="tbl-wrap"><table><thead><tr><th>Coin</th><th>Qty</th><th>Cost</th><th>ROI</th><th>Nilai IDR</th></tr></thead><tbody>
+    ${DATA.crypto.map(x => {
+      const roi = ((x.qty*x.kini/(x.qty*x.basis)-1)*100);
+      return `<tr>
+        <td><strong>${x.coin}</strong></td><td>${x.qty}</td>
+        <td>${rp(x.basis)}</td>
+        <td class="${roi>=0?'pos':'neg'}" style="font-weight:600">${roi>=0?'+':''}${roi.toFixed(1)}%</td>
+        <td>${rp(x.qty*x.kini)}</td>
+      </tr>`;
+    }).join('')}
+    </tbody></table></div>
+  </div>
+</div>
+<div class="card">
+  <div class="card-hd"><span class="card-title">P2P Lending</span><span class="badge badge-amber">${rp(a.p.v)}</span></div>
+  <div class="tbl-wrap"><table><thead><tr><th>Platform</th><th>Borrower</th><th>Pokok</th><th>Outstanding</th><th>Return/thn</th><th>Risiko</th></tr></thead><tbody>
+  ${DATA.p2p.map(x => `<tr>
+    <td>${x.platform}</td><td>${x.borrower}</td>
+    <td>${rp(x.pokok)}</td><td style="font-weight:600">${rp(x.outstanding)}</td>
+    <td style="color:var(--green);font-weight:600">${x.rate}%</td>
+    <td><span class="badge badge-${x.risk==='Low'?'green':x.risk==='Medium'?'amber':'red'}">${x.risk}</span></td>
+  </tr>`).join('')}
+  </tbody></table></div>
+</div>`;
+}
+
+function pgMarket() {
+  return `
+<div class="topbar"><div><div class="page-title">Market Data</div>
+<div class="page-sub">Harga live dari Yahoo Finance via Cloudflare Worker</div></div>
+<div class="topbar-right"><button class="btn btn-primary" onclick="fetchPrices()"><i class="ti ti-refresh"></i> Refresh</button></div></div>
+<div id="mkt-status" class="note" style="margin-bottom:12px">Tekan Refresh untuk mengambil harga terbaru dari Yahoo Finance</div>
+<div class="row2">
+  <div class="card">
+    <div class="card-hd"><span class="card-title">Saham Indonesia</span></div>
+    ${DATA.saham.map(x => {
+      const d = marketPrices[x.kode+'.JK'];
+      const chg = d?.prevClose ? ((d.price-d.prevClose)/d.prevClose*100).toFixed(2) : null;
+      return `<div class="mkt-row">
+        <div><div class="mkt-sym">${x.kode}</div><div class="mkt-name">${x.nama}</div></div>
+        <div class="mkt-price">
+          <div class="mkt-val">${d?.price?fmt(Math.round(d.price)):fmt(x.kini)}</div>
+          <div class="mkt-chg ${chg?(parseFloat(chg)>=0?'pos':'neg'):'muted'}">${chg?(parseFloat(chg)>=0?'▲':'▼')+Math.abs(chg)+'%':'manual'}</div>
+        </div>
+      </div>`;
+    }).join('')}
+  </div>
+  <div class="card">
+    <div class="card-hd"><span class="card-title">ETF USA</span></div>
+    ${DATA.etf.map(x => {
+      const d = marketPrices[x.ticker];
+      const chg = d?.prevClose ? ((d.price-d.prevClose)/d.prevClose*100).toFixed(2) : null;
+      return `<div class="mkt-row">
+        <div><div class="mkt-sym">${x.ticker}</div><div class="mkt-name">ETF USA</div></div>
+        <div class="mkt-price">
+          <div class="mkt-val">${d?.price?'$'+d.price.toFixed(2):'$'+x.kini}</div>
+          <div class="mkt-chg ${chg?(parseFloat(chg)>=0?'pos':'neg'):'muted'}">${chg?(parseFloat(chg)>=0?'▲':'▼')+Math.abs(chg)+'%':'manual'}</div>
+        </div>
+      </div>`;
+    }).join('')}
+  </div>
+</div>
+<div class="card">
+  <div class="card-hd"><span class="card-title">Cara Kerja Integrasi Yahoo Finance</span></div>
+  <div style="font-size:12px;color:var(--text2);line-height:1.9">
+    <div>• Browser → <code style="background:var(--bg3);padding:1px 4px;border-radius:3px">/api/prices?tickers=BBCA.JK,VOO</code> → Cloudflare Worker → Yahoo Finance</div>
+    <div>• Worker cache 5 menit di edge Cloudflare — tidak menghamburkan quota Yahoo</div>
+    <div>• Jika Yahoo rate-limit, harga fallback ke nilai manual di DATA object</div>
+  </div>
+  <div class="code-block">// functions/api/prices.js — sudah ada di repo
+fetch('/api/prices?tickers=BBCA.JK,VOO,QQQ')
+  .then(r => r.json())
+  .then(data => {
+    // data['BBCA.JK'] = { price: 9750, prevClose: 9700, currency: 'IDR', ... }
+    // data['VOO']    = { price: 518.2, prevClose: 516.1, currency: 'USD', ... }
+  })</div>
+</div>`;
+}
+
+function pgDebt() {
+  const a = calc();
+  const dti = (a.debt.c/DATA.income*100).toFixed(1);
+  return `
+<div class="topbar"><div><div class="page-title">Debt Management</div></div></div>
+<div class="kpi-row">
+  <div class="kpi" style="--kpi-accent:var(--red)"><div class="kpi-label">Total Hutang</div><div class="kpi-value">${rp(a.debt.t)}</div></div>
+  <div class="kpi" style="--kpi-accent:var(--amber)"><div class="kpi-label">Debt Ratio</div><div class="kpi-value">${(a.debt.t/a.aset*100).toFixed(1)}%</div><div class="kpi-sub">Target &lt; 40%</div></div>
+  <div class="kpi" style="--kpi-accent:${parseFloat(dti)>40?'var(--red)':'var(--green)'}"><div class="kpi-label">Debt-to-Income</div><div class="kpi-value">${dti}%</div><div class="kpi-sub">${parseFloat(dti)>40?'⚠ Di atas aman':'✓ Aman'}</div></div>
+  <div class="kpi" style="--kpi-accent:var(--blue)"><div class="kpi-label">Cicilan/bln</div><div class="kpi-value">${rp(a.debt.c)}</div></div>
+</div>
+<div class="card">
+  <div class="card-hd"><span class="card-title">Daftar Hutang</span></div>
+  <div class="tbl-wrap"><table><thead><tr><th>Nama</th><th>Tipe</th><th>Outstanding</th><th>Bunga/thn</th><th>Cicilan/bln</th><th>Prioritas</th></tr></thead><tbody>
+  ${[...DATA.debt].sort((a,b)=>b.bunga-a.bunga).map((x,i) => `<tr>
+    <td><strong>${x.nama}</strong></td><td><span class="badge badge-${i===0?'red':i===1?'amber':'blue'}">${x.tipe}</span></td>
+    <td style="font-weight:600">${rp(x.outstanding)}</td>
+    <td class="neg" style="font-weight:600">${x.bunga}%</td>
+    <td>${rp(x.cicilan)}</td>
+    <td><span class="badge badge-${i===0?'red':i===1?'amber':'blue'}">${i===0?'Prioritas Utama':'P'+(i+1)}</span></td>
+  </tr>`).join('')}
+  </tbody></table></div>
+</div>
+<div class="row2">
+  <div class="card"><div class="card-hd"><span class="card-title">Debt Avalanche — Bunga Tertinggi</span></div>
+    ${[...DATA.debt].sort((a,b)=>b.bunga-a.bunga).map((x,i) => `
+    <div style="margin-bottom:11px">
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+        <span>${i+1}. ${x.nama}</span><span class="neg">${x.bunga}% p.a.</span></div>
+      <div class="bar-wrap" style="height:6px"><div class="bar" style="width:${(x.outstanding/a.debt.t*100).toFixed(0)}%;background:var(--amber)"></div></div>
+    </div>`).join('')}
+    <div style="font-size:11px;color:var(--green-d);margin-top:6px">Hemat bunga total paling besar dengan strategi ini</div>
+  </div>
+  <div class="card"><div class="card-hd"><span class="card-title">Debt Snowball — Nominal Terkecil</span></div>
+    ${[...DATA.debt].sort((a,b)=>a.outstanding-b.outstanding).map((x,i) => `
+    <div style="margin-bottom:11px">
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+        <span>${i+1}. ${x.nama}</span><span class="muted">${rp(x.outstanding)}</span></div>
+      <div class="bar-wrap" style="height:6px"><div class="bar" style="width:${(x.outstanding/a.debt.t*100).toFixed(0)}%;background:var(--blue)"></div></div>
+    </div>`).join('')}
+    <div style="font-size:11px;color:var(--blue-d);margin-top:6px">Motivasi tinggi karena satu hutang lunas lebih cepat</div>
+  </div>
+</div>`;
+}
+
+function pgPiutang() {
+  const piu = DATA.piutang;
+  const totPokok = piu.reduce((s,x) => s+x.pokok, 0);
+  const totTerbayar = piu.reduce((s,x) => s+x.terbayar, 0);
+  const totOutstanding = totPokok - totTerbayar;
+  const collectRate = (totTerbayar/totPokok*100).toFixed(1);
+  const lunas = piu.filter(x=>x.status==='Lunas').length;
+  const avatarColors = {'Lancar':['var(--blue-l)','var(--blue-d)'],'Lunas':['var(--green-l)','var(--green-d)'],'Telat':['var(--red-l)','var(--red-d)']};
+  return `
+<div class="topbar"><div><div class="page-title">Piutang</div>
+<div class="page-sub">Kelola dan pantau progress pembayaran piutang</div></div></div>
+<div class="kpi-row">
+  <div class="kpi" style="--kpi-accent:var(--blue)"><div class="kpi-label">Total Pokok</div><div class="kpi-value">${rp(totPokok)}</div></div>
+  <div class="kpi" style="--kpi-accent:var(--amber)"><div class="kpi-label">Outstanding</div><div class="kpi-value">${rp(totOutstanding)}</div></div>
+  <div class="kpi" style="--kpi-accent:var(--green)"><div class="kpi-label">Collection Rate</div><div class="kpi-value">${collectRate}%</div></div>
+  <div class="kpi" style="--kpi-accent:var(--purple)"><div class="kpi-label">Sudah Lunas</div><div class="kpi-value">${lunas}/${piu.length}</div><div class="kpi-sub">debitur</div></div>
+</div>
+<div class="card">
+  <div class="card-hd"><span class="card-title">Daftar Piutang & Progress Pembayaran</span></div>
+  ${piu.map(x => {
+    const sisa = x.pokok - x.terbayar;
+    const pct = (x.terbayar/x.pokok*100).toFixed(0);
+    const [bg,fg] = avatarColors[x.status] || avatarColors['Lancar'];
+    const daysLeft = Math.ceil((new Date(x.jatuhTempo)-new Date())/(86400000));
+    const barColor = x.status==='Lunas'?'var(--green)':x.status==='Telat'?'var(--red)':'var(--blue)';
+    return `
+    <div class="piu-row">
+      <div class="piu-avatar" style="background:${bg};color:${fg}">${x.nama.charAt(0).toUpperCase()}</div>
+      <div class="piu-info">
+        <div class="piu-name">${x.nama}</div>
+        <div class="piu-meta">${x.keperluan} · Jatuh tempo ${new Date(x.jatuhTempo).toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'})}</div>
+        <div class="piu-prog">
+          <div class="bar-wrap" style="height:5px;margin-top:5px">
+            <div class="bar" style="width:${pct}%;background:${barColor}"></div>
+          </div>
+          <div style="font-size:10px;color:var(--text3);margin-top:2px">${pct}% terbayar · ${rp(x.terbayar)} dari ${rp(x.pokok)}</div>
+        </div>
+      </div>
+      <div class="piu-amt">
+        <div class="piu-val">${rp(sisa)}</div>
+        <div class="piu-date">sisa</div>
+        <div style="margin-top:4px"><span class="badge badge-${x.status==='Lunas'?'green':x.status==='Telat'?'red':'blue'}">${x.status}</span></div>
+      </div>
+    </div>`;
+  }).join('')}
+</div>
+<div class="row2">
+  <div class="card">
+    <div class="card-hd"><span class="card-title">Aging Analysis</span></div>
+    ${[
+      {l:'Belum jatuh tempo', v:piu.filter(x=>new Date(x.jatuhTempo)>new Date()&&x.status!=='Lunas').reduce((s,x)=>s+(x.pokok-x.terbayar),0), c:'badge-blue'},
+      {l:'Telat / Macet',     v:piu.filter(x=>x.status==='Telat').reduce((s,x)=>s+(x.pokok-x.terbayar),0), c:'badge-red'},
+      {l:'Sudah lunas',       v:piu.filter(x=>x.status==='Lunas').reduce((s,x)=>s+x.pokok,0), c:'badge-green'},
+    ].map(x => `<div class="mini-stat"><span class="badge ${x.c}">${x.l}</span><span style="font-weight:600">${rp(x.v)}</span></div>`).join('')}
+  </div>
+  <div class="card">
+    <div class="card-hd"><span class="card-title">Recovery Rate</span></div>
+    <div style="font-size:28px;font-weight:700;color:var(--green);letter-spacing:-0.5px;margin-bottom:4px">${collectRate}%</div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:10px">dari total pokok piutang</div>
+    <div class="bar-wrap" style="height:8px"><div class="bar" style="width:${collectRate}%;background:var(--green)"></div></div>
+    <div style="font-size:11px;color:var(--text3);margin-top:6px">${rp(totTerbayar)} terbayar dari ${rp(totPokok)}</div>
+  </div>
+</div>`;
+}
+
+function pgFire() {
+  const a = calc();
+  const target = a.passive*25;
+  const pct = Math.min(100, a.net/target*100);
+  return `
+<div class="topbar"><div><div class="page-title">FIRE Calculator</div>
+<div class="page-sub">Financial Independence, Retire Early</div></div></div>
+<div class="kpi-row">
+  <div class="kpi" style="--kpi-accent:var(--green)"><div class="kpi-label">Net Worth</div><div class="kpi-value">${rp(a.net)}</div></div>
+  <div class="kpi" style="--kpi-accent:var(--amber)"><div class="kpi-label">FIRE Number</div><div class="kpi-value">${rp(target)}</div><div class="kpi-sub">Rule of 25</div></div>
+  <div class="kpi" style="--kpi-accent:var(--green)"><div class="kpi-label">Progress</div><div class="kpi-value">${pct.toFixed(1)}%</div></div>
+  <div class="kpi" style="--kpi-accent:var(--blue)"><div class="kpi-label">4% Withdrawal</div><div class="kpi-value">${rp(a.net*0.04/12)}</div><div class="kpi-sub">/bln saat FIRE</div></div>
+</div>
+<div class="card">
+  <div class="card-hd"><span class="card-title">FIRE Timeline</span></div>
+  <div class="fire-bar" style="height:12px"><div class="fire-fill" style="width:${pct.toFixed(1)}%"></div></div>
+  <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin:3px 0 14px">${rp(a.net)} → ${rp(target)}</div>
+  <div style="position:relative;height:220px"><canvas id="fireC" role="img" aria-label="Proyeksi net worth menuju FIRE"></canvas></div>
+</div>
+<div class="row2">
+  <div class="card"><div class="card-hd"><span class="card-title">FIRE Scenarios</span></div>
+    ${[{n:'Lean FIRE',t:800000000,desc:'~Rp 2.7jt/bln'},{n:'Regular FIRE',t:target,desc:'Biaya hidup saat ini'},{n:'Fat FIRE',t:target*2,desc:'Gaya hidup premium'}].map(s => `
+    <div style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px">
+        <strong>${s.n}</strong><span class="${a.net>=s.t?'pos':'muted'}">${a.net>=s.t?'✓ Tercapai':rp(s.t)}</span></div>
+      <div style="font-size:10px;color:var(--text3);margin-bottom:4px">${s.desc}</div>
+      <div class="bar-wrap" style="height:6px"><div class="bar" style="width:${Math.min(100,a.net/s.t*100).toFixed(0)}%;background:var(--green)"></div></div>
+    </div>`).join('')}
+  </div>
+  <div class="card"><div class="card-hd"><span class="card-title">Estimasi Tahun Tercapai</span></div>
+    ${[3,5,10].map(inv => {
+      let nw=a.net, yr=0;
+      while(nw<target && yr<50) { nw=nw*1.12+inv*1e6*12; yr++; }
+      return `<div class="mini-stat"><span>Investasi ${rp(inv*1e6)}/bln</span><span style="font-weight:600;color:var(--green)">${yr<50?new Date().getFullYear()+yr:'> 2074'}</span></div>`;
+    }).join('')}
+    <div style="font-size:10px;color:var(--text3);margin-top:8px">Asumsi CAGR 12% · tidak termasuk inflasi</div>
+  </div>
+</div>`;
+}
+
+function drawFireChart() {
+  const a = calc();
+  const target = a.passive*25;
+  const labels=[], vals=[], tgts=[];
+  let nw = a.net;
+  for(let i=0;i<=20;i++){
+    labels.push(new Date().getFullYear()+i);
+    vals.push(+(nw/1e9).toFixed(2));
+    tgts.push(+(target/1e9).toFixed(2));
+    nw = nw*1.12+5e6*12;
+  }
+  const canvas = document.getElementById('fireC');
+  if (!canvas || !window.Chart) return;
+  new Chart(canvas, {
+    type:'line',
+    data:{labels, datasets:[
+      {label:'Net Worth',data:vals,borderColor:'#1D9E75',backgroundColor:'rgba(29,158,117,0.07)',fill:true,tension:0.4,pointRadius:2},
+      {label:'FIRE Target',data:tgts,borderColor:'#EF9F27',borderDash:[5,4],pointRadius:0,fill:false}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{ticks:{callback:v=>'Rp'+v+'M'}},x:{ticks:{maxTicksLimit:6}}}}
+  });
+}
+
+function pgProj() {
+  return `
+<div class="topbar"><div><div class="page-title">Future Projection</div></div></div>
+<div class="card">
+  <div class="card-hd"><span class="card-title">Simulasi Interaktif 20 Tahun</span></div>
+  <div style="display:flex;gap:20px;flex-wrap:wrap;margin-bottom:16px">
+    ${[{id:'cagr',l:'CAGR',min:5,max:20,val:12,u:'%'},{id:'infl',l:'Inflasi',min:2,max:8,val:5,u:'%'},{id:'inv',l:'Invest/bln',min:1,max:25,val:5,u:'jt'}].map(s => `
+    <div style="display:flex;align-items:center;gap:8px;font-size:12px">
+      <label style="width:72px;color:var(--text2)">${s.l}</label>
+      <input type="range" id="${s.id}" min="${s.min}" max="${s.max}" value="${s.val}" step="1" style="width:100px">
+      <span id="${s.id}V" style="min-width:36px;font-weight:600">${s.val}${s.u}</span>
+    </div>`).join('')}
+  </div>
+  <div id="simCards" class="sim-grid"></div>
+  <div style="position:relative;height:260px"><canvas id="projC" role="img" aria-label="Proyeksi 20 tahun"></canvas></div>
+</div>`;
+}
+
+function initProjChart() {
+  const a = calc();
+  let ch = null;
+  function update() {
+    const cagr = parseInt(document.getElementById('cagr')?.value||12)/100;
+    const infl = parseInt(document.getElementById('infl')?.value||5)/100;
+    const inv  = parseInt(document.getElementById('inv')?.value||5)*1e6;
+    document.getElementById('cagrV').textContent = Math.round(cagr*100)+'%';
+    document.getElementById('inflV').textContent = Math.round(infl*100)+'%';
+    document.getElementById('invV').textContent  = 'Rp'+Math.round(inv/1e6)+'jt';
+    let nN=a.net, nR=a.net;
+    const noms=[], reals=[], lbls=[];
+    for(let i=0;i<=20;i++){
+      lbls.push(new Date().getFullYear()+i);
+      noms.push(+(nN/1e9).toFixed(2));
+      reals.push(+(nR/1e9).toFixed(2));
+      nN = nN*(1+cagr)+inv*12;
+      nR = nR*(1+cagr-infl)+inv*12;
+    }
+    document.getElementById('simCards').innerHTML = [5,10,20].map(y => `
+      <div class="sim-card">
+        <div class="sim-yr">${y} Tahun (${new Date().getFullYear()+y})</div>
+        <div class="sim-val">${rp(noms[y]*1e9)}</div>
+        <div class="sim-real">Real: ${rp(reals[y]*1e9)}</div>
+      </div>`).join('');
+    if(ch) ch.destroy();
+    ch = new Chart(document.getElementById('projC'), {
+      type:'line',
+      data:{labels:lbls, datasets:[
+        {label:'Nominal',data:noms,borderColor:'#378ADD',fill:false,tension:0.4,pointRadius:2},
+        {label:'Real',   data:reals,borderColor:'#888780',borderDash:[4,3],fill:false,tension:0.4,pointRadius:2}
+      ]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{ticks:{callback:v=>'Rp'+v+'M'}},x:{ticks:{maxTicksLimit:6}}}}
+    });
+  }
+  setTimeout(() => {
+    ['cagr','infl','inv'].forEach(id => document.getElementById(id)?.addEventListener('input', update));
+    update();
+  }, 100);
+}
+
+function pgTax() {
+  const a = calc();
+  return `
+<div class="topbar"><div><div class="page-title">Tax Center</div></div></div>
+<div class="kpi-row">
+  <div class="kpi" style="--kpi-accent:var(--red)"><div class="kpi-label">Pajak Dividen IDX</div><div class="kpi-value">${rp(a.s.d*0.1)}</div><div class="kpi-sub">PPh 10% final</div></div>
+  <div class="kpi" style="--kpi-accent:var(--amber)"><div class="kpi-label">Pajak Transaksi</div><div class="kpi-value">${rp(a.s.v*0.001)}</div><div class="kpi-sub">0.1% dari nilai jual</div></div>
+  <div class="kpi" style="--kpi-accent:var(--blue)"><div class="kpi-label">Withholding ETF USA</div><div class="kpi-value">${rp(a.e.d*0.15)}</div><div class="kpi-sub">15% di AS</div></div>
+  <div class="kpi" style="--kpi-accent:var(--red)"><div class="kpi-label">Total Est. Pajak</div><div class="kpi-value">${rp(a.s.d*0.1+a.s.v*0.001+a.e.d*0.15)}</div><div class="kpi-sub">per tahun</div></div>
+</div>
+<div class="card">
+  <div class="card-hd"><span class="card-title">Pajak per Saham IDX</span></div>
+  <div class="tbl-wrap"><table><thead><tr><th>Saham</th><th>Dividen/thn</th><th>Pajak Div (10%)</th><th>Est. Pajak Jual</th><th>Total Estimasi</th></tr></thead><tbody>
+  ${DATA.saham.map(x => {
+    const lot=100, div=x.lot*lot*x.div, pd=div*0.1, pt=x.lot*lot*x.kini*0.001;
+    return `<tr><td><strong>${x.kode}</strong></td><td>${rp(div)}</td><td class="neg">${rp(pd)}</td><td class="neg">${rp(pt)}</td><td class="neg" style="font-weight:600">${rp(pd+pt)}</td></tr>`;
+  }).join('')}
+  </tbody></table></div>
+</div>
+<div class="card">
+  <div class="card-hd"><span class="card-title">Ringkasan Pajak per Aset Class</span></div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;font-size:12px">
+    ${[
+      {t:'Dividen Saham IDX',v:'PPh 10% final',n:'Dipotong emiten/custodian'},
+      {t:'Capital Gain Saham',v:'0.1% dari nilai jual',n:'Final saat transaksi jual'},
+      {t:'Dividen ETF USA',v:'15% withholding',n:'Dipotong di AS'},
+      {t:'Crypto',v:'0.1% PPh final',n:'Per transaksi jual di bursa'},
+      {t:'P2P Lending',v:'15% PPh',n:'Dipotong platform'},
+      {t:'Deposito',v:'20% PPh final',n:'Dipotong bank saat jatuh tempo'},
+    ].map(x => `<div style="background:var(--bg3);border-radius:var(--radius);padding:10px 12px">
+      <div style="font-weight:600;margin-bottom:4px">${x.t}</div>
+      <div style="color:var(--green-d);margin-bottom:3px">${x.v}</div>
+      <div style="color:var(--text3)">${x.n}</div>
+    </div>`).join('')}
+  </div>
+</div>`;
+}
+
+function pgAI() {
+  const a = calc();
+  return `
+<div class="topbar"><div><div class="page-title">AI Financial Advisor</div>
+<div class="page-sub">Powered by Claude · Konteks portofolio real-time otomatis di-inject</div></div></div>
+<div class="ai-wrap">
+  <div class="ai-head">
+    <div class="ai-pulse"></div>
+    <span style="font-size:12px;font-weight:600">WealthOS AI</span>
+    <span style="font-size:10px;color:var(--text3);margin-left:auto">claude-sonnet-4-6 via /api/ai</span>
+  </div>
+  <div class="chips">
+    ${['Analisis alokasi asetku','Strategi lunasi hutang','Kapan bisa FIRE?','Dana darurat cukup?','Piutang mana bermasalah?','Aset paling produktif?'].map(q => `<span class="chip" onclick="quickAsk('${q}')">${q}</span>`).join('')}
+  </div>
+  <div class="msgs" id="aiMsgs"></div>
+  <div class="ai-foot">
+    <input class="ai-inp" id="aiIn" placeholder="Tanya tentang portofolio, FIRE, pajak, piutang..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAI();}">
+    <button class="ai-send" id="aiBtn" onclick="sendAI()"><i class="ti ti-send"></i> Kirim</button>
+  </div>
+</div>`;
+}
+
+function getCtx() {
+  const a = calc();
+  return `Kamu adalah AI financial advisor WealthOS yang tajam dan jujur. Tidak perlu basa-basi.
+
+DATA PORTOFOLIO REAL-TIME:
+- Net Worth: ${rp(a.net)} | Total Aset: ${rp(a.aset)} | Hutang: ${rp(a.debt.t)} (${(a.debt.t/a.aset*100).toFixed(1)}%)
+- Passive Income: ${rp(a.passive/12)}/bln (${rp(a.passive)}/thn)
+- Saham IDX: ${rp(a.s.v)} — BBCA(+22%), TLKM(-16%), ASII(-20%), BMRI(+23%), GOTO(-43%)
+- ETF USA: ${rp(a.e.v)} (VOO, QQQ, VTI — semua profit)
+- Crypto: ${rp(a.c.v)} (BTC+91%, ETH+38%, SOL+28%)
+- P2P: ${rp(a.p.v)} — 1 high risk (Koinworks)
+- Bank (Dana Darurat): ${rp(a.bankTotal)} = ${a.emMonths.toFixed(1)} bulan
+- Deposito: ${rp(DATA.deposito)} | Emas: ${rp(DATA.emas)} | Obligasi: ${rp(DATA.obligasi)}
+- Pendapatan: ${rp(DATA.income)}/bln | Cicilan: ${rp(a.debt.c)}/bln (DTI ${(a.debt.c/DATA.income*100).toFixed(1)}%)
+- PIUTANG: Budi Santoso (lancar, sisa ${rp(10000000)}), PT Karya Muda (lancar, sisa ${rp(20000000)}), Ahmad Fauzi (TELAT, sisa ${rp(13000000)}), Rina Dewi (LUNAS)
+- KPR 8.5% | Kartu Kredit 25.5% (!!) | Pinjaman Usaha 11%
+- Wealth Score: ${a.wScore}/100
+
+Jawab singkat, tajam, pakai angka konkret. Bahasa Indonesia. Bullet jika perlu.`;
+}
+
+function initAI() {
+  if (aiMsgs.length === 0) {
+    const a = calc();
+    aiMsgs = [{
+      role:'ai',
+      text:`Portofolio Anda sudah dianalisis. Net worth **${rp(a.net)}** dengan passive income **${rp(a.passive/12)}/bln**.\n\n3 hal prioritas:\n• **Kartu Kredit 25.5%** — bunga paling mahal, lunasi secepatnya\n• **Piutang Ahmad Fauzi** — status telat, sisa ${rp(13000000)}\n• **GOTO rugi 43%** — evaluasi hold atau cut loss`
+    }];
+  }
+  renderMsgs();
+}
+
+function renderMsgs() {
+  const el = document.getElementById('aiMsgs');
+  if (!el) return;
+  el.innerHTML = aiMsgs.map(m => `
+    <div class="msg-row ${m.role==='user'?'user':''}">
+      ${m.role==='ai' ? `<div class="msg-av" style="background:var(--green-l);color:var(--green-d)"><i class="ti ti-brain" style="font-size:11px"></i></div>` : ''}
+      <div class="bubble ${m.role==='ai'?'ai':'user'} ${m.loading?'loading':''}">${m.text.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>')}</div>
+      ${m.role==='user' ? `<div class="msg-av" style="background:var(--purple-l);color:var(--purple-d);font-size:10px;font-weight:700">ZA</div>` : ''}
+    </div>`).join('');
+  el.scrollTop = el.scrollHeight;
+}
+
+async function sendAI(msg) {
+  const inp = document.getElementById('aiIn');
+  const txt = msg || (inp?.value.trim() || '');
+  if (!txt) return;
+  if (inp) inp.value = '';
+  aiMsgs.push({role:'user', text:txt});
+  aiMsgs.push({role:'ai', text:'Menganalisis portofolio Anda...', loading:true});
+  renderMsgs();
+  const btn = document.getElementById('aiBtn');
+  if (btn) btn.disabled = true;
+  try {
+    // Kirim ke /api/ai (Cloudflare Worker) — API key tidak pernah di-expose ke browser
+    const res = await fetch('/api/ai', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        messages: [{role:'user', content: getCtx()+'\n\n---\nPertanyaan: '+txt}]
+      })
+    });
+    const data = await res.json();
+    const reply = data.content?.[0]?.text || data.error || 'Terjadi kesalahan.';
+    aiMsgs[aiMsgs.length-1] = {role:'ai', text:reply};
+  } catch(err) {
+    aiMsgs[aiMsgs.length-1] = {role:'ai', text:'Gagal terhubung ke AI: '+err.message};
+  }
+  renderMsgs();
+  if (btn) btn.disabled = false;
+}
+
+function quickAsk(q) { sendAI(q); }
+
+// ─────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────
+navTo('dashboard');
+// Auto-fetch harga saat load (tidak blocking — fallback ke manual jika gagal)
+setTimeout(fetchPrices, 500);
+</script>
+</body>
+</html>
