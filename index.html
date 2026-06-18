@@ -270,6 +270,12 @@ tr:hover td{background:var(--surface-container-low)}
     <button class="nav-item" data-page="settings"><span class="material-symbols-outlined">settings</span>Pengaturan</button>
   </nav>
   <div class="sidebar-footer">
+    <div style="margin-bottom:8px;padding:6px 8px;background:var(--surface-container-low);border-radius:var(--radius-md);display:flex;align-items:center;justify-content:space-between">
+      <span id="sync-status" style="font-size:10px;color:var(--on-surface-variant)">⚡ Lokal</span>
+      <button onclick="loadFromSupabase()" style="background:none;border:none;cursor:pointer;padding:2px 4px;border-radius:4px" title="Sync sekarang">
+        <span class="material-symbols-outlined" style="font-size:14px;color:var(--on-surface-variant)">sync</span>
+      </button>
+    </div>
     <div class="user-row">
       <div class="user-av" id="sidebarAv">ZA</div>
       <div>
@@ -428,8 +434,11 @@ function wScore({s,e,c,p,bankTotal,debt,aset,passive,emMonths}){
 const SB_CONFIGURED = !SUPABASE_URL.includes('GANTI_DENGAN');
 
 function setSyncStatus(msg){
-  const el=document.getElementById('sync-status');
-  if(el)el.textContent=msg;
+  const color = msg.includes('✓') ? 'var(--primary)' : msg.includes('⚠') ? 'var(--error)' : 'var(--on-surface-variant)';
+  document.querySelectorAll('#sync-status').forEach(el => {
+    el.textContent = msg;
+    el.style.color = color;
+  });
 }
 
 async function initSupabase(){
@@ -482,7 +491,25 @@ function saveLocal(){
 }
 
 function loadLocal(){
-  try{const d=localStorage.getItem('wealthos_data');if(d)D=JSON.parse(d);}catch{}
+  try{
+    const raw = localStorage.getItem('wealthos_data');
+    if(!raw) return; // tidak ada data tersimpan — pakai DEFAULT_DATA
+    const d = JSON.parse(raw);
+    // Validasi: data harus punya minimal saham array
+    // Kalau saham kosong DAN etf kosong DAN bank kosong = data rusak/kosong, buang
+    const isEmpty = (!d.saham || d.saham.length===0) &&
+                    (!d.etf   || d.etf.length===0)   &&
+                    (!d.bank  || d.bank.length===0);
+    if(isEmpty){
+      console.warn('WealthOS: localStorage data kosong/invalid, pakai DEFAULT_DATA');
+      localStorage.removeItem('wealthos_data');
+      return;
+    }
+    D = d;
+  }catch(e){
+    console.error('WealthOS: loadLocal error', e);
+    localStorage.removeItem('wealthos_data');
+  }
 }
 
 // Stub kosong — tidak dipakai lagi
@@ -1323,6 +1350,7 @@ function pgSettings(){
   <div style="font-size:14px;font-weight:600;margin-bottom:14px">Data Keuangan</div>
   <div style="display:flex;gap:8px;flex-wrap:wrap">
     <button class="btn btn-outline" onclick="exportJSON()"><span class="material-symbols-outlined" style="font-size:14px">download</span> Export JSON</button>
+    <button class="btn btn-outline" onclick="clearLocalCache()" style="color:var(--tertiary);border-color:var(--outline-variant)"><span class="material-symbols-outlined" style="font-size:14px">cleaning_services</span> Bersihkan Cache</button>
     <button class="btn btn-outline" onclick="resetData()" style="color:var(--error);border-color:var(--error)"><span class="material-symbols-outlined" style="font-size:14px">restart_alt</span> Reset ke Default</button>
   </div>
   <div style="font-size:11px;color:var(--on-surface-variant);margin-top:10px">Data tersimpan di localStorage browser dan Supabase (jika login).</div>
@@ -1346,6 +1374,14 @@ CREATE POLICY "allow_all" ON wealthos_data
 </div>`;
 }
 
+
+function clearLocalCache(){
+  localStorage.removeItem('wealthos_data');
+  D = JSON.parse(JSON.stringify(DEFAULT_DATA));
+  saveLocal();
+  navTo('dashboard');
+  toast('✓ Cache dibersihkan — data default dimuat ulang');
+}
 
 function exportJSON(){
   const blob=new Blob([JSON.stringify(D,null,2)],{type:'application/json'});
