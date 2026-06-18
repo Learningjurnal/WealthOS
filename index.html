@@ -456,11 +456,24 @@ async function loadFromSupabase(){
       .maybeSingle();
     if(error)throw error;
     if(data?.payload){
-      D=JSON.parse(data.payload);
-      navTo(currentPage);
-      setSyncStatus('✓ Tersinkron');
+      const parsed = JSON.parse(data.payload);
+      // Validasi data dari Supabase juga
+      const hasData = (Array.isArray(parsed.saham) && parsed.saham.length>0) ||
+                      (Array.isArray(parsed.etf)   && parsed.etf.length>0)   ||
+                      (Array.isArray(parsed.bank)  && parsed.bank.length>0)  ||
+                      parsed.deposito > 0;
+      if(hasData){
+        D = parsed;
+        navTo(currentPage);
+        setSyncStatus('✓ Tersinkron');
+      } else {
+        // Data di Supabase juga kosong — simpan DEFAULT_DATA
+        setSyncStatus('✓ Terhubung');
+        await saveToSupabase();
+      }
     } else {
-      // Perangkat baru — push data lokal ke Supabase
+      // Belum ada data di Supabase — simpan data lokal saat ini
+      setSyncStatus('✓ Terhubung');
       await saveToSupabase();
     }
   }catch(e){
@@ -493,22 +506,25 @@ function saveLocal(){
 function loadLocal(){
   try{
     const raw = localStorage.getItem('wealthos_data');
-    if(!raw) return; // tidak ada data tersimpan — pakai DEFAULT_DATA
+    if(!raw){ D = JSON.parse(JSON.stringify(DEFAULT_DATA)); return; }
     const d = JSON.parse(raw);
-    // Validasi: data harus punya minimal saham array
-    // Kalau saham kosong DAN etf kosong DAN bank kosong = data rusak/kosong, buang
-    const isEmpty = (!d.saham || d.saham.length===0) &&
-                    (!d.etf   || d.etf.length===0)   &&
-                    (!d.bank  || d.bank.length===0);
-    if(isEmpty){
-      console.warn('WealthOS: localStorage data kosong/invalid, pakai DEFAULT_DATA');
+    // Cek apakah data valid dan punya isi
+    const hasSaham = Array.isArray(d.saham) && d.saham.length > 0;
+    const hasEtf   = Array.isArray(d.etf)   && d.etf.length > 0;
+    const hasBank  = Array.isArray(d.bank)   && d.bank.length > 0;
+    const hasDebt  = Array.isArray(d.debt)   && d.debt.length > 0;
+    const hasAnyData = hasSaham || hasEtf || hasBank || hasDebt || d.deposito > 0;
+    if(!hasAnyData){
+      console.warn('WealthOS: data tersimpan kosong — pakai DEFAULT_DATA');
       localStorage.removeItem('wealthos_data');
+      D = JSON.parse(JSON.stringify(DEFAULT_DATA));
       return;
     }
     D = d;
   }catch(e){
-    console.error('WealthOS: loadLocal error', e);
+    console.error('WealthOS: loadLocal error',e);
     localStorage.removeItem('wealthos_data');
+    D = JSON.parse(JSON.stringify(DEFAULT_DATA));
   }
 }
 
