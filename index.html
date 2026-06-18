@@ -309,8 +309,11 @@ tr:hover td{background:var(--surface-container-low)}
 // SUPABASE CONFIG
 // Ganti dengan URL dan anon key project kamu
 // ══════════════════════════════════════════════
-const SUPABASE_URL = 'https://urchcfaxgtdamwzvgdvs.supabase.co/rest/v1/';
-const SUPABASE_KEY = 'sb_publishable_ub-Ye9P_UohbTbX_uten1w_oDANyCdU';
+// ── GANTI DUA BARIS INI DENGAN KREDENSIAL SUPABASE KAMU ──
+const SUPABASE_URL = 'https://urchcfaxgtdamwzvgdvs.supabase.co';
+const SUPABASE_KEY = 'GANTI_DENGAN_ANON_KEY_KAMU';
+// ─────────────────────────────────────────────────────────
+const DEVICE_ID = localStorage.getItem('wos_device') || (()=>{const id='wos_'+Math.random().toString(36).slice(2,10);localStorage.setItem('wos_device',id);return id;})();
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // ══════════════════════════════════════════════
@@ -419,52 +422,58 @@ function wScore({s,e,c,p,bankTotal,debt,aset,passive,emMonths}){
 }
 
 // ══════════════════════════════════════════════
-// SUPABASE — Auth & CRUD
+// SUPABASE — Direct REST (tanpa login/auth)
+// Data disimpan per device_id, sync otomatis
 // ══════════════════════════════════════════════
-async function initSupabase(){
-  if(SUPABASE_URL.includes('YOUR_PROJECT')){
-    setSyncStatus('⚡ Mode lokal'); return;
-  }
-  try{
-    const {data:{session}}=await sb.auth.getSession();
-    if(session){await onLogin(session.user);}
-    else{setSyncStatus('🔒 Belum login'); showLoginPrompt();}
-    sb.auth.onAuthStateChange((_,s)=>{if(s)onLogin(s.user);else{userId=null;setSyncStatus('🔒 Belum login');}});
-  }catch{setSyncStatus('⚠ Supabase error');}
-}
-
-async function onLogin(user){
-  userId=user.id;
-  const init=user.user_metadata?.full_name||user.email||'Pengguna';
-  const nm=init.split(' ')[0]||'Pengguna';
-  document.getElementById('sidebarName').textContent=nm;
-  document.getElementById('sidebarEmail').textContent=user.email||'';
-  document.getElementById('sidebarAv').textContent=nm.slice(0,2).toUpperCase();
-  setSyncStatus('🔄 Memuat...');
-  await loadFromSupabase();
-  setSyncStatus('✓ Tersinkron');
-}
+const SB_CONFIGURED = !SUPABASE_URL.includes('GANTI_DENGAN');
 
 function setSyncStatus(msg){
   const el=document.getElementById('sync-status');
   if(el)el.textContent=msg;
 }
 
+async function initSupabase(){
+  if(!SB_CONFIGURED){ setSyncStatus('⚡ Lokal'); return; }
+  setSyncStatus('🔄 Menghubungkan...');
+  await loadFromSupabase();
+}
+
 async function loadFromSupabase(){
-  if(!userId)return;
+  if(!SB_CONFIGURED)return;
   try{
-    const{data,error}=await sb.from('wealthos_data').select('*').eq('user_id',userId).single();
-    if(data?.payload){D=JSON.parse(data.payload); navTo(currentPage);}
-  }catch{}
+    const{data,error}=await sb.from('wealthos_data')
+      .select('payload')
+      .eq('device_id', DEVICE_ID)
+      .maybeSingle();
+    if(error)throw error;
+    if(data?.payload){
+      D=JSON.parse(data.payload);
+      navTo(currentPage);
+      setSyncStatus('✓ Tersinkron');
+    } else {
+      // Perangkat baru — push data lokal ke Supabase
+      await saveToSupabase();
+    }
+  }catch(e){
+    setSyncStatus('⚠ '+e.message);
+    console.error('Supabase load error:',e);
+  }
 }
 
 async function saveToSupabase(){
-  if(!userId||SUPABASE_URL.includes('YOUR_PROJECT'))return;
+  if(!SB_CONFIGURED)return;
   setSyncStatus('🔄 Menyimpan...');
   try{
-    await sb.from('wealthos_data').upsert({user_id:userId,payload:JSON.stringify(D),updated_at:new Date().toISOString()},{onConflict:'user_id'});
+    const{error}=await sb.from('wealthos_data').upsert(
+      {device_id:DEVICE_ID, payload:JSON.stringify(D), updated_at:new Date().toISOString()},
+      {onConflict:'device_id'}
+    );
+    if(error)throw error;
     setSyncStatus('✓ Tersinkron');
-  }catch{setSyncStatus('⚠ Gagal simpan');}
+  }catch(e){
+    setSyncStatus('⚠ Gagal simpan');
+    console.error('Supabase save error:',e);
+  }
 }
 
 function saveLocal(){
@@ -476,28 +485,11 @@ function loadLocal(){
   try{const d=localStorage.getItem('wealthos_data');if(d)D=JSON.parse(d);}catch{}
 }
 
-async function loginSupabase(email,pass){
-  const{error}=await sb.auth.signInWithPassword({email,password:pass});
-  if(error)return error.message;
-  closeModal();toast('Login berhasil');
-  return null;
-}
-
-async function signupSupabase(email,pass,name){
-  const{error}=await sb.auth.signUp({email,password:pass,options:{data:{full_name:name}}});
-  if(error)return error.message;
-  closeModal();toast('Akun dibuat! Cek email untuk verifikasi.');
-  return null;
-}
-
-async function logoutSupabase(){
-  await sb.auth.signOut();userId=null;D=JSON.parse(JSON.stringify(DEFAULT_DATA));
-  document.getElementById('sidebarName').textContent='Pengguna';
-  document.getElementById('sidebarEmail').textContent='—';
-  setSyncStatus('🔒 Belum login');navTo('dashboard');toast('Logout berhasil');
-}
-
-function showLoginPrompt(){/* handled in settings page */}
+// Stub kosong — tidak dipakai lagi
+async function loginSupabase(){}
+async function signupSupabase(){}
+async function logoutSupabase(){ toast('Mode tanpa login aktif'); }
+function showLoginPrompt(){}
 
 // ══════════════════════════════════════════════
 // THEME
@@ -1297,31 +1289,28 @@ function pgAI(){
 }
 
 function pgSettings(){
-  const connected=!SUPABASE_URL.includes('YOUR_PROJECT')&&!!userId;
+  const connected=SB_CONFIGURED;
   return`
 <div style="font-size:17px;font-weight:700;margin-bottom:20px">Pengaturan</div>
 <div class="card card-p-lg" style="margin-bottom:14px">
   <div style="font-size:14px;font-weight:600;margin-bottom:14px">Akun & Sinkronisasi</div>
-  ${connected?`
-  <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;padding:12px;background:var(--surface-container-low);border-radius:var(--radius-md);border:1px solid var(--outline-variant)">
-    <div class="user-av" style="width:40px;height:40px;font-size:14px">${(document.getElementById('sidebarName')?.textContent||'?').slice(0,2).toUpperCase()}</div>
-    <div><div style="font-weight:600">${document.getElementById('sidebarName')?.textContent}</div><div style="font-size:11px;color:var(--on-surface-variant)">${document.getElementById('sidebarEmail')?.textContent}</div></div>
-    <span class="pill pill-green" style="margin-left:auto">Tersambung</span>
-  </div>
-  <button class="btn btn-outline" onclick="logoutSupabase()" style="width:100%"><span class="material-symbols-outlined" style="font-size:14px">logout</span> Logout</button>
-  `:`
   <div style="background:var(--primary-container);color:var(--on-primary-container);padding:12px;border-radius:var(--radius-md);font-size:12px;margin-bottom:14px">
-    Login untuk menyinkronkan data antar perangkat secara otomatis.
+    ${connected
+      ? `✓ Terhubung ke Supabase — data tersinkronisasi otomatis ke semua perangkat.`
+      : `⚡ Mode lokal — data hanya tersimpan di browser ini. Untuk sinkronisasi antar perangkat, edit dua baris di <code>index.html</code> dan isi URL + Anon Key Supabase.`}
   </div>
-  <div id="authForm">
-    <div class="field"><label>Email</label><input id="authEmail" type="email" placeholder="nama@email.com"></div>
-    <div class="field"><label>Password</label><input id="authPass" type="password" placeholder="Minimal 6 karakter"></div>
-    <div id="authErr" style="color:var(--error);font-size:12px;margin-bottom:10px;display:none"></div>
-    <div style="display:flex;gap:8px">
-      <button class="btn btn-primary" onclick="doLogin()" style="flex:1">Login</button>
-      <button class="btn btn-outline" onclick="doSignup()" style="flex:1">Daftar</button>
-    </div>
-  </div>`}
+  ${connected ? `
+  <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:8px 0;border-top:1px solid var(--outline-variant)">
+    <span style="color:var(--on-surface-variant)">Device ID</span>
+    <code style="font-size:10px;background:var(--surface-container);padding:2px 6px;border-radius:4px">${DEVICE_ID}</code>
+  </div>
+  <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:8px 0;border-top:1px solid var(--outline-variant)">
+    <span style="color:var(--on-surface-variant)">Supabase URL</span>
+    <code style="font-size:10px;background:var(--surface-container);padding:2px 6px;border-radius:4px">${SUPABASE_URL.replace('https://','').split('.')[0]}...</code>
+  </div>
+  <button class="btn btn-outline" onclick="loadFromSupabase().then(()=>toast('✓ Data dimuat ulang'))" style="width:100%;margin-top:10px">
+    <span class="material-symbols-outlined" style="font-size:14px">sync</span> Sinkronisasi Sekarang
+  </button>` : ''}
 </div>
 <div class="card card-p-lg" style="margin-bottom:14px">
   <div style="font-size:14px;font-weight:600;margin-bottom:14px">Tampilan</div>
@@ -1340,39 +1329,23 @@ function pgSettings(){
 </div>
 <div class="card card-p-lg">
   <div style="font-size:14px;font-weight:600;margin-bottom:10px">Setup Supabase</div>
-  <div class="code-blk">-- Jalankan di Supabase SQL Editor:
+  <div class="code-blk">-- Jalankan SEKALI di Supabase SQL Editor:
 CREATE TABLE wealthos_data (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id UUID REFERENCES auth.users NOT NULL UNIQUE,
+  device_id TEXT NOT NULL UNIQUE,
   payload TEXT NOT NULL,
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 ALTER TABLE wealthos_data ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Users own data" ON wealthos_data
-  FOR ALL USING (auth.uid() = user_id);
+CREATE POLICY "allow_all" ON wealthos_data
+  FOR ALL USING (true) WITH CHECK (true);
 
--- Lalu update di index.html:
+-- Ganti dua baris di index.html:
 -- const SUPABASE_URL = 'https://xxx.supabase.co';
 -- const SUPABASE_KEY = 'eyJ...';</div>
 </div>`;
 }
 
-async function doLogin(){
-  const e=document.getElementById('authEmail')?.value,p=document.getElementById('authPass')?.value;
-  if(!e||!p){toast('Email dan password wajib');return;}
-  const err=await loginSupabase(e,p);
-  if(err){const el=document.getElementById('authErr');if(el){el.textContent=err;el.style.display='block';}}
-  else{navTo('settings');}
-}
-
-async function doSignup(){
-  const e=document.getElementById('authEmail')?.value,p=document.getElementById('authPass')?.value;
-  if(!e||!p){toast('Email dan password wajib');return;}
-  if(p.length<6){toast('Password minimal 6 karakter');return;}
-  const err=await signupSupabase(e,p,e.split('@')[0]);
-  if(err){const el=document.getElementById('authErr');if(el){el.textContent=err;el.style.display='block';}}
-  else{navTo('settings');}
-}
 
 function exportJSON(){
   const blob=new Blob([JSON.stringify(D,null,2)],{type:'application/json'});
