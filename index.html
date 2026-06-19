@@ -317,7 +317,7 @@ tr:hover td{background:var(--surface-container-low)}
 // ══════════════════════════════════════════════
 // ── GANTI DUA BARIS INI DENGAN KREDENSIAL SUPABASE KAMU ──
 const SUPABASE_URL = 'https://urchcfaxgtdamwzvgdvs.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_ub-Ye9P_UohbTbX_uten1w_oDANyCdU';
+const SUPABASE_KEY = 'GANTI_DENGAN_ANON_KEY_KAMU';
 // ─────────────────────────────────────────────────────────
 const DEVICE_ID = localStorage.getItem('wos_device') || (()=>{const id='wos_'+Math.random().toString(36).slice(2,10);localStorage.setItem('wos_device',id);return id;})();
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -326,48 +326,9 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 // DEFAULT DATA (fallback jika Supabase belum dikonfigurasi)
 // ══════════════════════════════════════════════
 const DEFAULT_DATA = {
-  saham:[
-    {id:1,kode:'BBCA',nama:'Bank Central Asia',lot:50,beli:8000,kini:9750,div:190},
-    {id:2,kode:'TLKM',nama:'Telekomunikasi Indo.',lot:200,beli:3800,kini:3200,div:168},
-    {id:3,kode:'ASII',nama:'Astra International',lot:100,beli:5800,kini:4650,div:220},
-    {id:4,kode:'BMRI',nama:'Bank Mandiri',lot:75,beli:5200,kini:6400,div:340},
-    {id:5,kode:'GOTO',nama:'GoTo Gojek Tokopedia',lot:500,beli:120,kini:68,div:0},
-  ],
-  etf:[
-    {id:1,ticker:'VOO',unit:5,basis:420,kini:518,div:6.6,wht:15},
-    {id:2,ticker:'QQQ',unit:3,basis:380,kini:487,div:1.8,wht:15},
-    {id:3,ticker:'VTI',unit:8,basis:210,kini:265,div:3.4,wht:15},
-  ],
-  crypto:[
-    {id:1,coin:'BTC',qty:0.12,basis:550000000,kini:1050000000},
-    {id:2,coin:'ETH',qty:1.5,basis:45000000,kini:62000000},
-    {id:3,coin:'SOL',qty:12,basis:1800000,kini:2300000},
-  ],
-  p2p:[
-    {id:1,platform:'Modalku',borrower:'PT Maju Bersama',pokok:50000000,outstanding:42000000,rate:14.5,risk:'Medium'},
-    {id:2,platform:'Investree',borrower:'CV Teknologi',pokok:25000000,outstanding:25000000,rate:12.0,risk:'Low'},
-    {id:3,platform:'Koinworks',borrower:'UD Sejahtera',pokok:30000000,outstanding:8000000,rate:15.0,risk:'High'},
-  ],
-  bank:[
-    {id:1,bank:'BCA',no:'***-1234',saldo:85000000,type:'Tabungan'},
-    {id:2,bank:'Mandiri',no:'***-5678',saldo:35000000,type:'Tabungan'},
-    {id:3,bank:'BRI',no:'***-9012',saldo:22000000,type:'Tabungan'},
-  ],
-  piutang:[
-    {id:1,nama:'Budi Santoso',keperluan:'Modal usaha warung',pokok:25000000,terbayar:15000000,jatuhTempo:'2025-09-01',status:'Lancar'},
-    {id:2,nama:'PT Karya Muda',keperluan:'Pinjaman operasional',pokok:50000000,terbayar:30000000,jatuhTempo:'2025-12-15',status:'Lancar'},
-    {id:3,nama:'Rina Dewi',keperluan:'Biaya pendidikan',pokok:10000000,terbayar:10000000,jatuhTempo:'2025-06-01',status:'Lunas'},
-    {id:4,nama:'Ahmad Fauzi',keperluan:'Modal bisnis online',pokok:15000000,terbayar:2000000,jatuhTempo:'2025-08-01',status:'Telat'},
-  ],
-  debt:[
-    {id:1,nama:'KPR Rumah',tipe:'KPR',outstanding:680000000,bunga:8.5,cicilan:7200000},
-    {id:2,nama:'Kartu Kredit BCA',tipe:'Kartu Kredit',outstanding:12500000,bunga:25.5,cicilan:12500000},
-    {id:3,nama:'Pinjaman Usaha',tipe:'Pinjaman',outstanding:145000000,bunga:11.0,cicilan:4100000},
-  ],
-  deposito:200000000,
-  emas:85000000,
-  obligasi:150000000,
-  income:35000000,
+  saham:[], etf:[], crypto:[], p2p:[],
+  bank:[], piutang:[], debt:[],
+  deposito:0, emas:0, obligasi:0, income:0,
 };
 
 // ══════════════════════════════════════════════
@@ -457,24 +418,15 @@ async function loadFromSupabase(){
     if(error)throw error;
     if(data?.payload){
       const parsed = JSON.parse(data.payload);
-      // Validasi data dari Supabase juga
-      const hasData = (Array.isArray(parsed.saham) && parsed.saham.length>0) ||
-                      (Array.isArray(parsed.etf)   && parsed.etf.length>0)   ||
-                      (Array.isArray(parsed.bank)  && parsed.bank.length>0)  ||
-                      parsed.deposito > 0;
-      if(hasData){
+      if(parsed && typeof parsed === 'object'){
         D = parsed;
         navTo(currentPage);
         setSyncStatus('✓ Tersinkron');
-      } else {
-        // Data di Supabase juga kosong — simpan DEFAULT_DATA
-        setSyncStatus('✓ Terhubung');
-        await saveToSupabase();
       }
     } else {
-      // Belum ada data di Supabase — simpan data lokal saat ini
-      setSyncStatus('✓ Terhubung');
+      // Belum ada data di Supabase untuk device ini — simpan state saat ini
       await saveToSupabase();
+      setSyncStatus('✓ Terhubung');
     }
   }catch(e){
     setSyncStatus('⚠ '+e.message);
@@ -506,25 +458,12 @@ function saveLocal(){
 function loadLocal(){
   try{
     const raw = localStorage.getItem('wealthos_data');
-    if(!raw){ D = JSON.parse(JSON.stringify(DEFAULT_DATA)); return; }
+    if(!raw) return; // belum pernah simpan — D tetap DEFAULT_DATA (kosong)
     const d = JSON.parse(raw);
-    // Cek apakah data valid dan punya isi
-    const hasSaham = Array.isArray(d.saham) && d.saham.length > 0;
-    const hasEtf   = Array.isArray(d.etf)   && d.etf.length > 0;
-    const hasBank  = Array.isArray(d.bank)   && d.bank.length > 0;
-    const hasDebt  = Array.isArray(d.debt)   && d.debt.length > 0;
-    const hasAnyData = hasSaham || hasEtf || hasBank || hasDebt || d.deposito > 0;
-    if(!hasAnyData){
-      console.warn('WealthOS: data tersimpan kosong — pakai DEFAULT_DATA');
-      localStorage.removeItem('wealthos_data');
-      D = JSON.parse(JSON.stringify(DEFAULT_DATA));
-      return;
-    }
-    D = d;
+    if(d && typeof d === 'object') D = d;
   }catch(e){
     console.error('WealthOS: loadLocal error',e);
     localStorage.removeItem('wealthos_data');
-    D = JSON.parse(JSON.stringify(DEFAULT_DATA));
   }
 }
 
@@ -1367,7 +1306,7 @@ function pgSettings(){
   <div style="display:flex;gap:8px;flex-wrap:wrap">
     <button class="btn btn-outline" onclick="exportJSON()"><span class="material-symbols-outlined" style="font-size:14px">download</span> Export JSON</button>
     <button class="btn btn-outline" onclick="clearLocalCache()" style="color:var(--tertiary);border-color:var(--outline-variant)"><span class="material-symbols-outlined" style="font-size:14px">cleaning_services</span> Bersihkan Cache</button>
-    <button class="btn btn-outline" onclick="resetData()" style="color:var(--error);border-color:var(--error)"><span class="material-symbols-outlined" style="font-size:14px">restart_alt</span> Reset ke Default</button>
+    <button class="btn btn-outline" onclick="resetData()" style="color:var(--error);border-color:var(--error)"><span class="material-symbols-outlined" style="font-size:14px">restart_alt</span> Kosongkan Semua Data</button>
   </div>
   <div style="font-size:11px;color:var(--on-surface-variant);margin-top:10px">Data tersimpan di localStorage browser dan Supabase (jika login).</div>
 </div>
@@ -1407,7 +1346,7 @@ function exportJSON(){
 
 function resetData(){
   openModal(`<div class="modal-header"><div class="modal-title">Reset Data</div></div>
-  <div class="modal-body"><p style="font-size:14px">Reset semua data ke nilai default? Data yang sudah diubah akan hilang.</p></div>
+  <div class="modal-body"><p style="font-size:14px">Hapus semua data portofolio? Semua aset, hutang, dan piutang akan dikosongkan. Tidak bisa dibatalkan.</p></div>
   <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal()">Batal</button>
   <button class="btn" style="background:var(--error);color:#fff" onclick="D=JSON.parse(JSON.stringify(DEFAULT_DATA));saveLocal();navTo('dashboard');closeModal();toast('✓ Data direset')">Reset</button></div>`);
 }
