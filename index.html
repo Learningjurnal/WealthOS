@@ -353,6 +353,7 @@ const rp = n => {
   return s+'Rp '+Math.round(a).toLocaleString('id-ID');
 };
 const fmt = n => Math.round(n).toLocaleString('id-ID');
+const safePct = (num, denom) => denom > 0 ? (num/denom*100) : 0;
 const uid = () => Date.now()+Math.random().toString(36).slice(2,6);
 
 function toast(msg,dur=2500){
@@ -371,17 +372,19 @@ function calc(){
   const debt=D.debt.reduce((a,x)=>({t:a.t+x.outstanding,c:a.c+x.cicilan}),{t:0,c:0});
   const aset=s.v+e.v+c.v+p.v+bankTotal+D.deposito+D.emas+D.obligasi+piu.total;
   const passive=s.d+e.d+p.d*12+D.deposito*0.055+D.obligasi*0.065;
-  const emMonths=bankTotal/(D.income+passive/12);
+  const denom = D.income+passive/12;
+  const emMonths = denom>0 ? bankTotal/denom : 0;
   const ws=wScore({s,e,c,p,bankTotal,debt,aset,passive,emMonths});
   return{s,e,c,p,bankTotal,piu,debt,aset,net:aset-debt.t,passive,emMonths,ws};
 }
 
 function wScore({s,e,c,p,bankTotal,debt,aset,passive,emMonths}){
+  if(aset<=0) return 0; // belum ada data sama sekali
   let sc=0;const dr=debt.t/aset;
   sc+=dr<0.2?25:dr<0.4?15:5;
   sc+=emMonths>=6?20:emMonths>=3?12:4;
   sc+=((s.v>0?1:0)+(e.v>0?1:0)+(c.v>0?1:0)+(p.v>0?1:0))*5;
-  const pc=(passive/12)/D.income;
+  const pc = D.income>0 ? (passive/12)/D.income : 0;
   sc+=pc>=0.5?20:pc>=0.3?12:5;
   const nw=aset-debt.t;
   sc+=nw>1e9?15:nw>5e8?10:5;
@@ -445,7 +448,7 @@ async function saveToSupabase(){
     if(error)throw error;
     setSyncStatus('✓ Tersinkron');
   }catch(e){
-    setSyncStatus('⚠ Gagal simpan');
+    setSyncStatus('⚠ '+(e.message||'Gagal simpan'));
     console.error('Supabase save error:',e);
   }
 }
@@ -822,10 +825,10 @@ function saveCrypto(id){
 // ══════════════════════════════════════════════
 function pgDash(){
   const a=calc();
-  const dr=(a.debt.t/a.aset*100).toFixed(1);
+  const dr=safePct(a.debt.t,a.aset).toFixed(1);
   const wsGrade=a.ws>=75?'Excellent':a.ws>=55?'Good':'Fair';
   const fireTarget=a.passive*25;
-  const firePct=Math.min(100,a.net/fireTarget*100);
+  const firePct=fireTarget>0?Math.min(100,a.net/fireTarget*100):0;
   return `
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:8px">
   <div style="font-size:17px;font-weight:700;letter-spacing:-.02em">Dashboard</div>
@@ -886,7 +889,7 @@ function pgDash(){
         ${[{l:'Saham IDX',v:a.s.v,c:'#006948'},{l:'ETF USA',v:a.e.v,c:'#10b981'},{l:'Crypto',v:a.c.v,c:'#f59e0b'},{l:'P2P',v:a.p.v,c:'#ef4444'},{l:'Bank',v:a.bankTotal,c:'#6366f1'},{l:'Deposito',v:D.deposito,c:'#94a3b8'}].map(x=>`
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;font-size:12px">
           <span style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:2px;background:${x.c};display:inline-block"></span>${x.l}</span>
-          <span style="font-weight:600">${(x.v/a.aset*100).toFixed(1)}%</span>
+          <span style="font-weight:600">${safePct(x.v,a.aset).toFixed(1)}%</span>
         </div>`).join('')}
       </div>
     </div>
@@ -1085,7 +1088,7 @@ function pgDebt(){
 </div>
 <div class="kpi-row-desktop">
   <div class="kpi-card"><div class="kpi-label">Total Hutang</div><div class="kpi-value neg">${rp(a.debt.t)}</div></div>
-  <div class="kpi-card"><div class="kpi-label">Debt Ratio</div><div class="kpi-value">${(a.debt.t/a.aset*100).toFixed(1)}%</div><div class="kpi-sub">Target &lt;40%</div></div>
+  <div class="kpi-card"><div class="kpi-label">Debt Ratio</div><div class="kpi-value">${safePct(a.debt.t,a.aset).toFixed(1)}%</div><div class="kpi-sub">Target &lt;40%</div></div>
   <div class="kpi-card"><div class="kpi-label">Debt-to-Income</div><div class="kpi-value ${parseFloat(dti)>40?'neg':''}">${dti}%</div><div class="kpi-sub">${parseFloat(dti)>40?'⚠ Di atas aman':'✓ Aman'}</div></div>
   <div class="kpi-card"><div class="kpi-label">Cicilan/bln</div><div class="kpi-value">${rp(a.debt.c)}</div></div>
 </div>
@@ -1170,7 +1173,7 @@ function pgPiutang(){
 }
 
 function pgFire(){
-  const a=calc();const target=a.passive*25,pct=Math.min(100,a.net/target*100);
+  const a=calc();const target=a.passive*25,pct=target>0?Math.min(100,a.net/target*100):0;
   return`
 <div style="font-size:17px;font-weight:700;margin-bottom:16px">FIRE Calculator</div>
 <div class="kpi-row-desktop">
@@ -1359,11 +1362,11 @@ function getCtx(){
   return`Kamu adalah AI financial advisor WealthOS. Tajam, jujur, tidak basa-basi. Pakai angka konkret.
 
 PORTOFOLIO:
-- Net Worth: ${rp(a.net)} | Aset: ${rp(a.aset)} | Hutang: ${rp(a.debt.t)} (${(a.debt.t/a.aset*100).toFixed(1)}%)
+- Net Worth: ${rp(a.net)} | Aset: ${rp(a.aset)} | Hutang: ${rp(a.debt.t)} (${safePct(a.debt.t,a.aset).toFixed(1)}%)
 - Passive Income: ${rp(a.passive/12)}/bln
 - Saham IDX: ${rp(a.s.v)} | ETF USA: ${rp(a.e.v)} | Crypto: ${rp(a.c.v)} | P2P: ${rp(a.p.v)}
 - Bank: ${rp(a.bankTotal)} = ${a.emMonths.toFixed(1)} bln dana darurat
-- Pendapatan: ${rp(D.income)}/bln | Cicilan: ${rp(a.debt.c)}/bln (DTI ${(a.debt.c/D.income*100).toFixed(1)}%)
+- Pendapatan: ${rp(D.income)}/bln | Cicilan: ${rp(a.debt.c)}/bln (DTI ${safePct(a.debt.c,D.income).toFixed(1)}%)
 - Piutang telat: ${D.piutang.filter(x=>x.status==='Telat').map(x=>x.nama+' sisa '+rp(x.pokok-x.terbayar)).join(', ')||'tidak ada'}
 - Hutang bunga tertinggi: ${[...D.debt].sort((a,b)=>b.bunga-a.bunga)[0]?.nama} ${[...D.debt].sort((a,b)=>b.bunga-a.bunga)[0]?.bunga}%
 - Wealth Score: ${a.ws}/100
