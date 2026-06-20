@@ -1273,10 +1273,42 @@ function pgAI(){
 </div>`;
 }
 
+function saveProfile(){
+  const income=parseFloat(document.getElementById('p-income').value)||0;
+  const deposito=parseFloat(document.getElementById('p-deposito').value)||0;
+  const emas=parseFloat(document.getElementById('p-emas').value)||0;
+  const obligasi=parseFloat(document.getElementById('p-obligasi').value)||0;
+  D.income=income;
+  D.deposito=deposito;
+  D.emas=emas;
+  D.obligasi=obligasi;
+  saveLocal();
+  toast('✓ Profil keuangan disimpan');
+  navTo('settings');
+}
+
 function pgSettings(){
   const connected=SB_CONFIGURED;
   return`
 <div style="font-size:17px;font-weight:700;margin-bottom:20px">Pengaturan</div>
+<div class="card card-p-lg" style="margin-bottom:14px">
+  <div style="font-size:14px;font-weight:600;margin-bottom:14px">Profil Keuangan</div>
+  <div style="font-size:12px;color:var(--on-surface-variant);margin-bottom:14px">Data ini digunakan untuk menghitung dana darurat, DTI, passive income, dan proyeksi FIRE.</div>
+  <div class="field-row">
+    <div class="field"><label>Pendapatan/bln (Rp)</label><input id="p-income" type="number" value="${D.income||''}" placeholder="20000000"></div>
+    <div class="field"><label>Total Deposito (Rp)</label><input id="p-deposito" type="number" value="${D.deposito||''}" placeholder="100000000"></div>
+  </div>
+  <div class="field-row">
+    <div class="field"><label>Total Emas (Rp)</label><input id="p-emas" type="number" value="${D.emas||''}" placeholder="50000000"></div>
+    <div class="field"><label>Total Obligasi (Rp)</label><input id="p-obligasi" type="number" value="${D.obligasi||''}" placeholder="50000000"></div>
+  </div>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-top:4px;flex-wrap:wrap;gap:8px">
+    <div style="font-size:11px;color:var(--on-surface-variant)">
+      Dana darurat: <strong>${D.income>0?(D.bank.reduce((s,x)=>s+x.saldo,0)/D.income).toFixed(1)+' bln':'— (isi pendapatan dulu)'}</strong>
+    </div>
+    <button class="btn btn-primary" onclick="saveProfile()"><span class="material-symbols-outlined" style="font-size:14px">save</span> Simpan Profil</button>
+  </div>
+</div>
 <div class="card card-p-lg" style="margin-bottom:14px">
   <div style="font-size:14px;font-weight:600;margin-bottom:14px">Akun & Sinkronisasi</div>
   <div style="background:var(--primary-container);color:var(--on-primary-container);padding:12px;border-radius:var(--radius-md);font-size:12px;margin-bottom:14px">
